@@ -1,0 +1,25 @@
+ungrouped_number,ungrouped_class,grouped_number,grouped_class
+0,No input data available,NA,NA
+111,"Closed forest, evergreen needle leaf",1,Evergreen needleleaf forest
+113,"Closed forest, deciduous needle leaf",3,Deciduous needleleaf forest
+112,"Closed forest, evergreen, broad leaf",2,Evergreen broadleaf forest
+114,"Closed forest, deciduous broad leaf",4,Deciduous broadleaf forest
+115,"Closed forest, mixed",5,Mixed forest
+116,"Closed forest, unknown",5,Mixed forest
+121,"Open forest, evergreen needle leaf",8,Woody savannas
+123,"Open forest, deciduous needle leaf",8,Woody savannas
+122,"Open forest, evergreen broad leaf",8,Woody savannas
+124,"Open forest, deciduous broad leaf",8,Woody savannas
+125,"Open forest, mixed",8,Woody savannas
+126,"Open forest, unknown",8,Woody savannas
+20,Shrubs,6,Closed shrublands
+30,Herbaceous vegetation,10,Short grasslands
+90,Herbaceous wetland,12,Permanent wetlands
+100,Moss and lichen,16,Barren or sparsely vegetated
+60,Bare / sparse vegetation,16,Barren or sparsely vegetated
+40,Cultivated and managed vegetation/agriculture (cropland),13,Croplands
+50,Urban / built up,14,Urban and built-up
+70,Snow and Ice,16,Barren or sparsely vegetated
+80,Permanent water bodies,17,Open water
+200,Open sea,17,Open water
+255,NA,NA,NA
