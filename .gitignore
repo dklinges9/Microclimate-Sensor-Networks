@@ -1,7 +1,7 @@
 # Large raster files
-data/spatial_drivers/landcover/original/*.tif
-data/spatial_drivers/vegetation/global_forest_change/original/*.tif
-data/spatial_drivers/macroclimate/*.nc
+data/spatial_drivers/landcover/original/**/*.tif
+data/spatial_drivers/vegetation/global_forest_change/original/**/*.tif
+data/spatial_drivers/macroclimate/**/*.nc
 
 # History files
 .Rhistory
