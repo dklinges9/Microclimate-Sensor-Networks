@@ -8,6 +8,10 @@ if (any(is.na(spatial_extent))) {
   }
 }
 
+if (!projection_units %in% c("dd", "m")) {
+  stop("Your projection_units must either be 'dd' or 'm'.")
+}
+
 if (projection_units == "dd") {
   
   ## Check spatial extent

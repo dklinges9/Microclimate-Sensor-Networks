@@ -227,7 +227,7 @@ Steps_Dim.3<-(max(terrain_df$Dim.3)-min(terrain_df$Dim.3))/Groups
 
 set.seed(1) #random selection in each bin is used; use set.seed to have the same selection in each run
 
-cat("BEGINNING SITE SELECTION....\n")
+cat("\n\nBEGINNING SITE SELECTION....\n\n")
 
 # Sleep for 1 seconds so user can see messages
 Sys.sleep(1.5)
@@ -376,6 +376,9 @@ if(nrow(Selection[complete.cases(Selection[,1:5]),])<n_sites){
 
 ## Write out CSV of selected sites -----------
 
-cat("Saving selected sites to a CSV file....\n")
+
 write_csv(Selection, paste0("data/chosen_sites/selected_sites_", n_sites, "_",
                             filepattern, ".csv"))
+
+cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", n_sites, "_",
+                                                        filepattern, ".csv"))
