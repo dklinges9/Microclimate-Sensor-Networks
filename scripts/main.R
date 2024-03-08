@@ -6,6 +6,7 @@
 
 
 ## Workplace prep ----------
+source("scripts/00_parameters/check_pkgs.R")
 
 source("scripts/00_parameters/set_parameters.R")
 
