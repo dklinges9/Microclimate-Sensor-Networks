@@ -69,5 +69,12 @@ if (projection_units == "m") {
     stop("If projection units are meters then the maximum distance must be as well (set_parameters.R; L54).\n")
   }
 }
-  
+
+power_vars <- c(n_sensors, r2, power, sum(ifelse(is.na(chosen_layers), NA, 1)))
+power_vars <- power_vars[complete.cases(power_vars)]
+
+  if (length(power_vars) < 3) {
+    stop("You must provide values for at least three of the following four inputs: `n_sensors`, `power`, `r2`, and `chosen_layers` (set_parameters.R; L20, L72, L79, L82)")
+  }
+
 cat("Checking parameters - OK!\n")

@@ -25,7 +25,7 @@ cost_per_sensor <- 100
 # Approximate number of sites to select (which needs to be no smaller than n_sensors)
 # The program will return a list of sites that will be no fewer than n_sites,
 # but might be slightly higher
-n_sites <- 75
+n_sites <- 30
 
 ## Spatial parameters ------------
 
@@ -67,9 +67,9 @@ required_sites <- NA
 
 ## Power analysis parameters ----------
 
-# Estimate of power (1 minus Type II error probability). If unknown, kept at 0.8
+# Estimate of power (1 minus Type II error probability). If unknown, keep at 0.8
 # OR is calculated
-power <- NULL
+power <- 0.8 # NULL
 
 # Estimate of the explanatory power (r2) of chosen set of predictors for
 # explaining response variable of interest (that is measured by sensors), OR
@@ -79,7 +79,11 @@ power <- NULL
 r2 <- 0.15
 
 ## Environmental layers ---------
-chosen_layers <- c("elevation", "slope", "aspect", "landcover") #  "ndvi", "proportion_forest", "patch_area_4neighbr"
+# chosen_layers must be a string of the names of a subset (or all) of the following:
+# elevation, slope, aspect, landcover, ndvi, proportion_forest, patch_area_4neighbr
+# If you intend to add other spatial predictors, please add their names to this string.
+# The length of this string is important for the power analysis.
+chosen_layers <- c("elevation", "slope", "aspect", "landcover")
 # When selecting sites, do you want to give more weight to outliers within 
 # the environmental space (e.g. more topographically complex areas)?
 favor_outliers <- FALSE 
