@@ -1,7 +1,6 @@
 ## David Klinges
 ## This script queries a DEM of desired resolution and extent
 
-
 library(elevatr)
 library(microclima)
 library(raster)
@@ -10,7 +9,7 @@ library(terra)
 spatial_extentr <- terra::rast(ext(spatial_extent))
 crs(spatial_extentr) <- projection
 
-cat("Getting dem....\n")
+cat("Getting DEM....\n")
 dem <- rast(get_dem(r = raster(spatial_extentr), resolution = chosen_rez))
 
 # Specify string for naming output files
@@ -48,5 +47,4 @@ if ("aspect" %in% chosen_layers) {
               overwrite = T)
 }  
 
-
-
+cat("Slope and aspect - OK!")

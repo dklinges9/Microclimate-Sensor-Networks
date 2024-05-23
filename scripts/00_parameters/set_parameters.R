@@ -17,7 +17,7 @@ landscape_name <- "oman1"
 # Number of sensors
 # If left as NA, program will calculate necessary and possible number from
 # power analysis and chosen budget
-n_sensors <- NA
+n_sensors <- NA_integer_
 # Your budget for sensors
 budget <- 5000
 cost_per_sensor <- 100
@@ -44,7 +44,7 @@ extent_shp <- NA
 # "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 # "+proj=longlat +datum=WGS84" 
 projection <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-projection_units <- "m" # c("m", "dd")
+projection_units <- "m" # c("m", "dd") for 'meters' and 'decimal degrees'
 # Your desired resolution of the DEM (must be at least 30 meters), which will
 # also determine the resolution at which all analyses are conducted
 # The following few parameters can be divided by 120000 for a quick
@@ -75,12 +75,12 @@ power <- NULL
 # explaining response variable of interest (that is measured by sensors), OR
 # desired r2. 
 # Used for calculating f2 (effect size) in power analysis. If unknown, kept at 0.15
-# (reasonably cautious for most environmental relationship)
+# (reasonably cautious for most environmental relationships)
 r2 <- 0.15
 
 ## Environmental layers ---------
 chosen_layers <- c("elevation", "slope", "aspect", "landcover") #  "ndvi", "proportion_forest", "patch_area_4neighbr"
-# When selecting sites, do you you want to give more weight to outliers within 
+# When selecting sites, do you want to give more weight to outliers within 
 # the environmental space (e.g. more topographically complex areas)?
 favor_outliers <- FALSE 
 # These parameters will become important once I've added in functionality for
@@ -88,5 +88,4 @@ favor_outliers <- FALSE
 ndvi_threshold <- .6
 forestcover2000_threshold <- 65 # what is threshold cover to be "forest"
 
-
-
+cat("Setting parameters - OK!\n")
