@@ -83,9 +83,27 @@ if ("landcover" %in% chosen_layers) {
     landcover <- terra::project(landcover, projection, method = "near")
   }
   
-  # Save landcover file
-  writeRaster(landcover, paste0("data/spatial_drivers/landcover/deriative/landcover_",
-                                filepattern, ".tif"))
+  # Save landcover file. But first, check if already exists and ask user if they
+  # want to overwrite
+  if (file.exists(paste0("data/spatial_drivers/landcover/deriative/landcover_",
+                         filepattern, ".tif"))) {
+    ans1 <- readline(paste0("File ", 
+                            paste0("data/spatial_drivers/landcover/deriative/landcover_",
+                                           filepattern, ".tif"), 
+                            " already exists. Overwrite? (Y/N): "))
+    
+    if (tolower(ans1) %in% c("y", "yes")) {
+      cat("File overwritten, continuing program.\n")
+      writeRaster(landcover, paste0("data/spatial_drivers/landcover/deriative/landcover_",
+                                    filepattern, ".tif"), overwrite = T)
+    }
+    if (tolower(ans1) %in% c("n", "no")) {
+      cat("File not overwritten, continuing program.\n")
+    }
+  } else {
+    writeRaster(landcover, paste0("data/spatial_drivers/landcover/deriative/landcover_",
+                                  filepattern, ".tif"))
+  }
 }
 
 ## Combine layers into single spatRaster stack -----------
