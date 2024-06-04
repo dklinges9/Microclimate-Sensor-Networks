@@ -23,6 +23,7 @@ if (complete.cases(landscape_name)) {
 layers <- rast(paste0("data/spatial_drivers/combined/layers_",
                       round(chosen_rez, 4), "_", filepattern, ".tif"))
 
+
 ## Extract sites from raster grids -----------
 
 layers_df <- as.data.frame(layers[[1]], xy = T)
@@ -39,10 +40,13 @@ if(any(!is.na(required_sites))) {
 layers_df <- terra::extract(layers, layers_df, xy = T, ID = FALSE)
 
 # Remove rows with NA
-layers_df<-layers_df[complete.cases(layers_df),]
+layers_df <- layers_df[complete.cases(layers_df),]
 
 ## Recode landcover as factor -----------
 if ("landcover" %in% chosen_layers) {
+  
+    landcover_link <- suppressMessages(read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv"))
+
   layers_df <- layers_df %>% 
     dplyr::rename(ungrouped_number = landcover) %>% 
     left_join(landcover_link %>% 
@@ -75,403 +79,412 @@ if (favor_outliers) {
     mutate_at(vars(all_of(chosen_layers[!chosen_layers == "landcover"])), ~sqrt(. + 0.0001))
 }
 
-## Ordination algorithm ----------
-
-Layers <- terrain_df %>% 
-  dplyr::select(all_of(chosen_layers)) 
-
-if ("landcover" %in% chosen_layers) {
-  ## FAMD (Factor Analysis of Mixed Data) if includes categorical vars ----------
-  # FAMD allows inclusion of non-continuous data
-  
-  # Specifying number of dimensions (ncp) as 3 as this is ndims to be included
-  # in selection below
-  # While with PCA via `prcomp()` below you must specify to center and scale
-  # continuous variables, this is done automatically in `FAMD()` (by necessity,
-  # given the comparison to non-continuous variables)
-  enviro_ord <- FAMD(na.omit(Layers), ncp = 3, graph = FALSE)
-  
-  cat("Summary of FAMD:\n")
-  print(enviro_ord)
-  
-  cat("\n
-      \n")
-  
-  eigen_vals <- get_eigenvalue(enviro_ord)
-  print(eigen_vals)
-  
-  cat("\n
-      \n")
-  
-  cat("Saving Eigen values docs/analysis/....\n")
-  write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, "_FAMD_eigen_vals.csv"))
-  
-  cat("\n
-      \n")
-  
-  scree_plot <- fviz_screeplot(enviro_ord)
-  
-  cat("Saving scree plot to figures/analysis/....\n")
-  ggsave(plot = scree_plot, filename = paste0("figures/analysis/", filepattern,
-                                       "_FAMD_screeplot.png"),
-         height = 5, width = 6)
-  
-  cat("Add FAMD coordinates to our dataframe of spatial drivers...\n")
-  # Add FAMD coordinates to our big table
-  terrain_df <- cbind(terrain_df,get_famd_ind(enviro_ord)$coord[,1:3]) 
-  
-  } else {
-  ## PCA (if no categorical vars) -----------------
-  
-  cat("\nConducting PCA of environmental variables...\n")
-  
-  enviro_ord <- prcomp(na.omit(Layers), center = TRUE, scale. = TRUE)
-  
-  cat("Summary of PCA:\n")
-  print(summary(enviro_ord))
-  
-  cat("\n
-      \n")
-  
-  eigen_vals <- get_eigenvalue(enviro_ord)
-  print(eigen_vals)
-  
-  cat("\n
-      \n")
-  
-  cat("Saving Eigen values docs/analysis/....\n")
-  write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, "_FAMD_eigen_vals.csv"))
-  
-  cat("\n
-      \n")
-  
-  scree_plot <- fviz_screeplot(enviro_ord)
-  
-  cat("Saving scree plot to figures/analysis/....\n")
-  ggsave(plot = scree_plot, filename = paste0("figures/analysis/", filepattern,
-                                              "_PCA_screeplot.png"),
-         height = 5, width = 6)
-  
-  cat("Add PCA coordinates to our dataframe of spatial drivers...\n")
-  # Add PCA coordinates to our big table
-  terrain_df <- cbind(terrain_df,get_pca_ind(enviro_ord)$coord[,1:3]) 
-  
-}
 
 ## Create functions to ensure min and max distance between sites -------
 
-check_min_dist <- function(Selection, min_distance, select_fun, attempts = 10, recur = 0) {
-
-  # Determine euclidean distance between new selection and all 
-  # previous selections
-  # Could use dist(), but takes too long. All we need to know is the
-  # distance between the newest sites and all other sites, as opposed
-  # to the distance between all sites and all other sites
-  # dis_spatial <- dist(dplyr::select(Selection, x, y), method = "euclidean")
+check_min_dist <- function(selected_sites, min_distance, attempts = 10, recur = 0) {
+  # Initialize badcoordcount
+  badcoordcount <- 0
   
-  # Find last row of Selection
-  s <- dplyr::slice(Selection, nrow(Selection))
-  dis_spatial <- apply(dplyr::select(Selection, x, y), 1, function(row) {
-    # sqrt(sum((x_i - y_i)^2))
-    sqrt((row[1] - s[,1])^2 + (row[2] - s[,2])^2)
-  })
-
-  # Remove last row of dis_spatial, as is self-distance
-  dis_spatial <- dis_spatial[1:(length(dis_spatial)-1)]
-
-  # If smallest distance is smaller than min_distance...
-  if (suppressWarnings(min(unlist(dis_spatial), na.rm =T) < min_distance)) {
-    cat("This site too close to another site, and so finding new one...\n")
+  # Determine euclidean distance all sites and all other sites
+  dis_spatial <- dist(dplyr::select(selected_sites, x, y), method = "euclidean")
+  
+  # Coerce to dataframe
+  dis_spatial_df <- as.data.frame(as.matrix(dis_spatial, nrow = nrow(selected_sites),
+                                            ncol = nrow(selected_sites)))
+  
+  # Find any coords that are too close to any other point
+  bad_coord <- dis_spatial_df %>% 
+    dplyr::filter_all(any_vars(. < min_distance & . > 0)) %>%
+    # Identify what rows these were, as this will allow us to join back to selected_sites
+    rownames_to_column()
+  
+  # If looped entirely through and did not find another point closer 
+  # than min_distance and did not find a good coordinate...
+  if (nrow(bad_coord) > 0) {
+    cat("Found", nrow(bad_coord), "sites that were too close to another site, and so finding new site(s)...\n")
     
-    # Remove last row
-    Selection <- dplyr::slice(Selection, 1:(nrow(Selection) - 1))
+    # Pull out the bad coords from selected_sites
+    new_selected_sites <- selected_sites %>% 
+      rownames_to_column() %>% 
+      dplyr::filter(rowname %in% bad_coord$rowname)
+    
+    # Remove bad coords
+    selected_sites <- selected_sites %>% 
+      rownames_to_column() %>% 
+      dplyr::filter(!rowname %in% bad_coord$rowname) %>% 
+      dplyr::select(-rowname)
     
     # Select new sites
-    Selection <- select_fun(Selection)
-
+    for (i in 1:nrow(new_selected_sites)) {
+      iter <- terrain_df %>% 
+        dplyr::filter(dim1_bin %in% new_selected_sites$dim1_bin[i] & 
+                        dim2_bin %in% new_selected_sites$dim2_bin[i] &
+                        dim3_bin %in% new_selected_sites$dim3_bin[i])
+      
+      if (nrow(iter) > 0) {
+        iter <- iter %>% 
+          group_by(dim1_bin, dim2_bin, dim3_bin) %>% 
+          sample_n(1) %>% 
+          ungroup()
+        
+      } else {
+        badcoordcount <- badcoordcount + 1
+        # If no other points in this bin, then need to just use the prior selection
+        iter <- new_selected_sites[i,] %>% 
+          dplyr::select(-rowname)
+      }
+      
+      if (i == 1) {
+        out <- iter
+      } else {
+        out <- bind_rows(out, iter)
+      }
+    }
+    
+    # Add in new coords
+    selected_sites <- selected_sites %>% 
+      bind_rows(out)
+    
+    # Remove from environment
+    rm("out")
+    
     # Recursive call
     # But if attempts-th attempt, then cancel
     if (recur > attempts) {
       cat("Could not find sites that were not above min distance after ",
-              attempts, " attempts. Choosing last site.\n")
+          attempts, " attempts. Choosing last site.\n")
     } else {
-      Selection <- check_min_dist(Selection, min_distance, select_fun(Selection), recur = recur + 1)
+      selected_sites <- check_min_dist(selected_sites, min_distance, recur = recur + 1)    
     }
   } else {
     if (recur >= 1 & recur <= attempts) {
-      cat("Successfully found a new site that is far enough away from all others.\n")
-    }
-  }
-  
-  # Then return selection
-  return(Selection)
-}
-
-check_max_dist <- function(Selection, max_distance, select_fun, attempts = 10, recur = 0) {
-  # Determine euclidean distance between new selection and all 
-  # previous selections
-  # Could use dist(), but takes too long. All we need to know is the
-  # distance between the newest sites and all other sites, as opposed
-  # to the distance between all sites and all other sites
-  # dis_spatial <- dist(dplyr::select(Selection, x, y), method = "euclidean")
-  
-  # Find last row of Selection
-  s <- dplyr::slice(Selection, nrow(Selection))
-  xs <- s$x
-  ys <- s$y
-  # Loop back through each prior coordinate (so not including last coordinate....
-  good_coord <- FALSE
-  for (coord in 1:((nrow(Selection)) - 1)) {
-    xi <- Selection$x[coord]
-    yi <- Selection$y[coord]
-    dist <- sqrt((xi - xs)^2 + (yi - ys)^2)
-    if (complete.cases(dist)) {
-      if (dist <= max_distance) {
-        good_coord <- TRUE
-        break
+      if (badcoordcount > 0) {
+        cat(badcoordcount, "of the chosen sites had to be closer than your specified min distance.\n")
+      } else {
+        cat("Successfully found all sites that are all far enough away from each other.\n")
       }
     }
   }
+  
+  # Then return selected_sites
+  return(selected_sites)
+}
+
+check_max_dist <- function(selected_sites, max_distance, attempts = 10, recur = 0) {
+  # Initialize badcoordcount
+  badcoordcount <- 0
+  
+  # Determine euclidean distance all sites and all other sites
+  dis_spatial <- dist(dplyr::select(selected_sites, x, y), method = "euclidean")
+  
+  # Coerce to dataframe
+  dis_spatial_df <- as.data.frame(as.matrix(dis_spatial, nrow = nrow(selected_sites),
+                                            ncol = nrow(selected_sites)))
+  
+  # Find any coords that are too far away from everything else
+  bad_coord <- dis_spatial_df %>% 
+    dplyr::filter_all(all_vars(. > max_distance | . == 0)) %>%
+    # Identify what rows these were, as this will allow us to join back to selected_sites
+    rownames_to_column()
+  
   # If looped entirely through and did not find another point closer 
   # than max_distance and did not find a good coordinate...
-  if (!good_coord) {
-    cat("This point too far away from all others, and so finding new one...\n")
+  if (nrow(bad_coord) > 0) {
+    cat("Found", nrow(bad_coord), "points that were too far away from all other points, and so finding new one...\n")
     
-    # Remove last row
-    Selection <- dplyr::slice(Selection, 1:(nrow(Selection) - 1))
+    # Pull out the bad coords from selected_sites
+    new_selected_sites <- selected_sites %>% 
+      rownames_to_column() %>% 
+      dplyr::filter(rowname %in% bad_coord$rowname)
+    
+    # Remove bad coords
+    selected_sites <- selected_sites %>% 
+      rownames_to_column() %>% 
+      dplyr::filter(!rowname %in% bad_coord$rowname) %>% 
+      dplyr::select(-rowname)
     
     # Select new sites
-    Selection <- select_fun(Selection)   
+    for (i in 1:nrow(new_selected_sites)) {
+      iter <- terrain_df %>% 
+        dplyr::filter(dim1_bin %in% new_selected_sites$dim1_bin[i] & 
+                        dim2_bin %in% new_selected_sites$dim2_bin[i] &
+                        dim3_bin %in% new_selected_sites$dim3_bin[i])
+      
+      if (nrow(iter) > 0) {
+        iter <- iter %>% 
+          group_by(dim1_bin, dim2_bin, dim3_bin) %>% 
+          sample_n(1) %>% 
+          ungroup()
+        
+        badcoordcount <- badcoordcount + 1
+        
+      } else {
+        # If no other points in this bin, then need to just use the prior selection
+        iter <- new_selected_sites[i,] %>% 
+          dplyr::select(-rowname)
+      }
+
+      if (i == 1) {
+        out <- iter
+      } else {
+        out <- bind_rows(out, iter)
+      }
+    }
+    
+    # Add in new coords
+    selected_sites <- selected_sites %>% 
+      bind_rows(out)
     
     # Recursive call
     # But if attempts-th attempt, then cancel
     if (recur > attempts) {
       cat("Could not find sites that were not below max distance after ",
-              attempts, " attempts. Choosing last site.\n")
+          attempts, " attempts. Choosing last site.\n")
     } else {
-      Selection <- check_max_dist(Selection, max_distance, select_fun(Selection), recur = recur + 1)    
+      selected_sites <- check_max_dist(selected_sites, max_distance, recur = recur + 1)    
     }
   } else {
     if (recur >= 1 & recur <= attempts) {
-      cat("Successfully found a new site that is close enough to at least one other site.\n")
+      if (badcoordcount > 0) {
+        cat(badcoordcount, "of the chosen sites had to be farther away than your specified max distance.\n")
+      } else {
+        cat("Successfully found all sites that are all close enough to each other.\n")
+      }
     }
   }
   
-  # Then return selection
-  return(Selection)
+  # Then return selected_sites
+  return(selected_sites)
 }
 
 
-## Add in any required or pre-visited sites -------------
+## Create selected_sites dataframe, add in any required or pre-visited sites -------------
 
 if(any(!is.na(required_sites))) {
   cat("Adding in required sites....\n")
-  Selection <- dplyr::select(required_sites, x, y) %>% 
-    left_join(terrain_df)
+  
+  if (all(c("dim1_bin", "dim2_bin", "dim3_bin") %in% colnames(required_sites))) {
+    cat("Required sites have ordination bins from a prior run, so selecting for complementary sites...\n")
+    
+    selected_sites <- dplyr::select(required_sites, x, y, dim1_bin, dim2_bin, dim3_bin) %>% 
+      mutate(bin_string = paste(dim1_bin, dim2_bin, dim3_bin)) %>% 
+      left_join(terrain_df, by = join_by(x, y))
+    
+  } else {
+    selected_sites <- dplyr::select(required_sites, x, y) %>% 
+      left_join(terrain_df, by = join_by(x, y))
+  }
 } else {
-  Selection <- c()
+  selected_sites <- c()
+}
+
+## Ordination algorithm ----------
+# random selection in each bin is used; use set.seed to have the same selection in each run
+set.seed(seed = 1)
+
+if (program_rerun) {
+  cat("Re-running program, and therefore using ordination values from last run...\n")
+  if (any(complete.cases(landscape_bins))) {
+    terrain_df <- landscape_bins 
+  }
+} else {
+  enviro_layers_df <- terrain_df %>% 
+    dplyr::select(all_of(chosen_layers)) 
+  
+  if ("landcover" %in% chosen_layers) {
+    ## FAMD (Factor Analysis of Mixed Data) if includes categorical vars ----------
+    # FAMD allows inclusion of non-continuous data
+    
+    # Specifying number of dimensions (ncp) as 3 as this is ndims to be included
+    # in selection below
+    # While with PCA via `prcomp()` below you must specify to center and scale
+    # continuous variables, this is done automatically in `FAMD()` (by necessity,
+    # given the comparison to non-continuous variables)
+    enviro_ord <- FAMD(na.omit(enviro_layers_df), ncp = 3, graph = FALSE)
+    
+    cat("Summary of FAMD:\n")
+    print(enviro_ord)
+    
+    cat("\n
+      \n")
+    
+    eigen_vals <- get_eigenvalue(enviro_ord)
+    print(eigen_vals)
+    
+    cat("\n
+      \n")
+    
+    cat("Saving Eigen values docs/analysis/....\n")
+    write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, "_FAMD_eigen_vals.csv"))
+    
+    cat("\n
+      \n")
+    
+    scree_plot <- fviz_screeplot(enviro_ord)
+    
+    cat("Saving scree plot to figures/analysis/....\n")
+    ggsave(plot = scree_plot, filename = paste0("figures/analysis/", filepattern,
+                                                "_FAMD_screeplot.png"),
+           height = 5, width = 6)
+    
+    cat("Add FAMD coordinates to our dataframe of spatial drivers...\n")
+    # Add FAMD coordinates to our big table
+    terrain_df <- cbind(terrain_df,get_famd_ind(enviro_ord)$coord[,1:3]) 
+    
+  } else {
+    ## PCA (if no categorical vars) -----------------
+    
+    cat("\nConducting PCA of environmental variables...\n")
+    
+    enviro_ord <- prcomp(na.omit(enviro_layers_df), center = TRUE, scale. = TRUE)
+    
+    cat("Summary of PCA:\n")
+    print(summary(enviro_ord))
+    
+    cat("\n
+      \n")
+    
+    eigen_vals <- get_eigenvalue(enviro_ord)
+    print(eigen_vals)
+    
+    cat("\n
+      \n")
+    
+    cat("Saving Eigen values docs/analysis/....\n")
+    write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, "_FAMD_eigen_vals.csv"))
+    
+    cat("\n
+      \n")
+    
+    scree_plot <- fviz_screeplot(enviro_ord)
+    
+    cat("Saving scree plot to figures/analysis/....\n")
+    ggsave(plot = scree_plot, filename = paste0("figures/analysis/", filepattern,
+                                                "_PCA_screeplot.png"),
+           height = 5, width = 6)
+    
+    cat("Add PCA coordinates to our dataframe of spatial drivers...\n")
+    # Add PCA coordinates to our big table
+    terrain_df <- cbind(terrain_df,get_pca_ind(enviro_ord)$coord[,1:3]) 
+    
+  }
 }
 
 ## Perform Hierarchical Selection ----------
 
-#Selection of sample locations by dividing 3D environmental space into little cubes, 
-#and selecting same amount of locations in each cube
-#Note that this is just one possible way in which the selection can be made, 
-#alternatively, a more rigorous approach could be used that maximimizes the environmental distances between the 
-#selected sites (e.g., using Euclidian distances and the function dist() in the stats package)
-#such an approach would however take very long to run, especially for large areas, making it less user-friendly.
-
-# Note: algorithm does NOT cycle until all these sites have been achieved, 
-# although it has two optional clauses to select additional locations till this number is reached (see below)
-
-# Subtract backup_percent
-n_sites_1 <- floor(n_sites * (1 - backup_percent))
-
-Groups <- ceiling(n_sites_1^0.33) # 0.33 is used, as we are using environmental space as a cube, which we want to cut into little cubes, with selection of n_sites_1 in each cube. 0.33 gives a reasonable selection, but number can be changed to have a coarser or more strict selection
-
-# Divide each ordination axis in the same number of bins with equal sizes along each axis
-Steps_Dim.1<-(max(terrain_df$Dim.1)-min(terrain_df$Dim.1))/Groups
-Steps_Dim.2<-(max(terrain_df$Dim.2)-min(terrain_df$Dim.2))/Groups
-Steps_Dim.3<-(max(terrain_df$Dim.3)-min(terrain_df$Dim.3))/Groups
-
-cat("\n\nBEGINNING SITE SELECTION....\n\n")
-
-# Sleep for 1.5 seconds so user can see messages
-Sys.sleep(1.5)
-
-for (i in 1:Groups) {
-   #hierarchical selection procedure, first based on dimension 1, 
-   #then on dim 2 and 3, each time within the groups of Dim. 1
-  #select all sites within the i'th bin of axis 1
-  Selection1 <- terrain_df[terrain_df$Dim.1>(suppressWarnings(min(terrain_df$Dim.1))+(i-1)*Steps_Dim.1) & 
-                             terrain_df$Dim.1<(suppressWarnings(min(terrain_df$Dim.1))+i*Steps_Dim.1),]
-  for (j in 1:Groups) {
-    #select all sites from the i'th bin that fall in the j'th bin of axis 2
-    Selection2 <- Selection1[Selection1$Dim.2>(suppressWarnings(min(Selection1$Dim.2))+(j-1)*Steps_Dim.2) & 
-                               Selection1$Dim.2<(suppressWarnings(min(Selection1$Dim.2))+j*Steps_Dim.2),]
-    for (k in 1:Groups) {
-      #select all sites in that j'th bin that fall within the k'th bin of axis 3
-      Selection3 <- Selection2[Selection2$Dim.3>(suppressWarnings(min(Selection2$Dim.3))+(k-1)*Steps_Dim.3) & 
-                                 Selection2$Dim.3<(suppressWarnings(min(Selection2$Dim.3))+k*Steps_Dim.3),]
-      
-      #randomly select a point within that cube with dimensions i,j,k
-      #depending on distribution of locations in the ordination space (and size of the bins suggested earlier), 
-      #there will be more or fewer cubes with dimension i,j,k that have no sites, where thus no sites will be selected
-      Selection <- rbind(Selection,Selection3[sample(1:nrow(Selection3), 1),])
-      
-      # Filter to non-NA
-      Selection<-Selection[complete.cases(Selection[,1:5]),]
-      
-      # If not first iteration and this new bin has sites in it, BUT also has
-      # more than just one point to choose from....
-      if (nrow(Selection) > 1 & nrow(Selection3) > 1) {
-        # Designate select_function
-        select_fun <- function(Selection) {
-          Selection3 <- Selection2[Selection2$Dim.3>(suppressWarnings(min(Selection2$Dim.3))+(k-1)*Steps_Dim.3) &
-                                     Selection2$Dim.3<(suppressWarnings(min(Selection2$Dim.3))+k*Steps_Dim.3),]
-          Selection <- rbind(Selection,Selection3[sample(1:nrow(Selection3), 1),])
-          Selection<-Selection[complete.cases(Selection[,1:5]),]
-          return(Selection)
-        } 
-        
-        # Perform min distance check
-        Selection <- check_min_dist(Selection, min_distance, select_fun = select_fun)
-        # Perform max distance check
-        Selection <- check_max_dist(Selection, max_distance, select_fun = select_fun)
-      }
-    }
-  }
+if (!program_rerun) {
+  #Selection of sample locations by dividing 3D environmental space into little cubes, 
+  #and selecting same amount of locations in each cube
+  #Note that this is just one possible way in which the selection can be made, 
+  #alternatively, a more rigorous approach could be used that maximimizes the environmental distances between the 
+  #selected sites (e.g., using Euclidian distances and the function dist() in the stats package)
+  #such an approach would however take very long to run, especially for large areas, making it less user-friendly.
   
-  if(nrow(Selection[complete.cases(Selection[,1:5]),])<(i*n_sites_1/Groups)) { 
-    #if not enough potential sampling sites in the cubes, 
-    #we can fill out with random selections from the main category, as many as are in there
-    #this is optional and not done in the paper, as it only matters if a fixed amount of locations is required
-    if((i*n_sites_1/Groups)-nrow(Selection[complete.cases(Selection[,1:5]),])< nrow(Selection1)){
-      Selection4 <- Selection1[sample(1:nrow(Selection1), (i*n_sites_1/Groups)-nrow(Selection[complete.cases(Selection[,1:5]),])),]
-      Selection <- rbind(Selection, Selection4)
-    } else {
-      Selection4 <- Selection1
-      Selection <- rbind(Selection, Selection4)
-    }
-    # If not first iteration and this new bin (Selection4) has sites in it, BUT also has
-    # more than just one point to choose from....
-    if (k > 1 | j > 1 | i > 1 & nrow(Selection) > 1 & nrow(Selection4) > 1) {
-      # Designate select_function
-      select_fun <- function(Selection) {
-        Selection4 <- Selection1[sample(1:nrow(Selection1), (i*n_sites_1/Groups)-nrow(Selection[complete.cases(Selection[,1:5]),])),]
-        Selection <- rbind(Selection, Selection4)
-        return(Selection)
-      }
-      # Perform min distance check
-      Selection <- check_min_dist(Selection, min_distance = min_distance,
-                                  select_fun = select_fun)
-      # Perform max distance check
-      Selection <- check_max_dist(Selection, max_distance = max_distance, select_fun = select_fun)
-    }
-  }
-}
-
-## ....Add redundant "back-up" sites -------------
-
-if (backup_percent > 0) {
-  cat("Adding back-up sites....\n")
+  # Note: algorithm does NOT cycle until all these sites have been achieved, 
+  # although it has two optional clauses to select additional locations till this number is reached (see below)
   
-  # Subtract backup_percent
-  n_sites_2 <- n_sites * backup_percent
-  
-  Groups <- round(n_sites_2^0.33) # 0.33 is used, as we are using environmental space as a cube, which we want to cut into little cubes, with selection of n_sites_2 in each cube. 0.33 gives a reasonable selection, but number can be changed to have a coarser or more strict selection
+  Groups <- round(n_sites^0.33) # 0.33 is used, as we are using environmental space as a cube, which we want to cut into little cubes, with selection of n_sites_1 in each cube. 0.33 gives a reasonable selection, but number can be changed to have a coarser or more strict selection
   
   # Divide each ordination axis in the same number of bins with equal sizes along each axis
   Steps_Dim.1<-(max(terrain_df$Dim.1)-min(terrain_df$Dim.1))/Groups
   Steps_Dim.2<-(max(terrain_df$Dim.2)-min(terrain_df$Dim.2))/Groups
   Steps_Dim.3<-(max(terrain_df$Dim.3)-min(terrain_df$Dim.3))/Groups
   
-  set.seed(1) # random selection in each bin is used; use set.seed to have the same selection in each run
-  
-  cat("\n\nBACK-UP SITE SELECTION....\n\n")
+  cat("\n\nBEGINNING SITE SELECTION....\n\n")
   
   # Sleep for 1.5 seconds so user can see messages
   Sys.sleep(1.5)
   
-  for (i in 1:Groups) {
-    #hierarchical selection procedure, first based on dimension 1, 
-    #then on dim 2 and 3, each time within the groups of Dim. 1
-    #select all sites within the i'th bin of axis 1
-    Selection1 <- terrain_df[terrain_df$Dim.1>(suppressWarnings(min(terrain_df$Dim.1))+(i-1)*Steps_Dim.1) & 
-                               terrain_df$Dim.1<(suppressWarnings(min(terrain_df$Dim.1))+i*Steps_Dim.1),]
-    for (j in 1:Groups) {
-      #select all sites from the i'th bin that fall in the j'th bin of axis 2
-      Selection2 <- Selection1[Selection1$Dim.2>(suppressWarnings(min(Selection1$Dim.2))+(j-1)*Steps_Dim.2) & 
-                                 Selection1$Dim.2<(suppressWarnings(min(Selection1$Dim.2))+j*Steps_Dim.2),]
-      for (k in 1:Groups) {
-        #select all sites in that j'th bin that fall within the k'th bin of axis 3
-        Selection3 <- Selection2[Selection2$Dim.3>(suppressWarnings(min(Selection2$Dim.3))+(k-1)*Steps_Dim.3) & 
-                                   Selection2$Dim.3<(suppressWarnings(min(Selection2$Dim.3))+k*Steps_Dim.3),]
-        
-        #randomly select a point within that cube with dimensions i,j,k
-        #depending on distribution of locations in the ordination space (and size of the bins suggested earlier), 
-        #there will be more or fewer cubes with dimension i,j,k that have no sites, where thus no sites will be selected
-        Selection <- rbind(Selection,Selection3[sample(1:nrow(Selection3), 1),])
-        
-        # Filter to non-NA
-        Selection<-Selection[complete.cases(Selection[,1:5]),]
-        
-        # If not first iteration and this new bin has sites in it, BUT also has
-        # more than just one point to choose from....
-        if (nrow(Selection) > 1 & nrow(Selection3) > 1) {
-          # Designate select_function
-          select_fun <- function(Selection) {
-            Selection3 <- Selection2[Selection2$Dim.3>(suppressWarnings(min(Selection2$Dim.3))+(k-1)*Steps_Dim.3) &
-                                       Selection2$Dim.3<(suppressWarnings(min(Selection2$Dim.3))+k*Steps_Dim.3),]
-            Selection <- rbind(Selection,Selection3[sample(1:nrow(Selection3), 1),])
-            Selection<-Selection[complete.cases(Selection[,1:5]),]
-            return(Selection)
-          } 
-          
-          # Perform min distance check
-          Selection <- check_min_dist(Selection, min_distance, select_fun = select_fun)
-          # Perform max distance check
-          Selection <- check_max_dist(Selection, max_distance, select_fun = select_fun)
-        }
-      }
-    }
-    
-    if(nrow(Selection[complete.cases(Selection[,1:5]),])<(i*n_sites_2/Groups)){ 
-      #if not enough potential sampling sites in the cubes, 
-      #we can fill out with random selections from the main category, as many as are in there
-      #this is optional and not done in the paper, as it only matters if a fixed amount of locations is required
-      if((i*n_sites_2/Groups)-nrow(Selection[complete.cases(Selection[,1:5]),])< nrow(Selection1)){
-        Selection4 <- Selection1[sample(1:nrow(Selection1), (i*n_sites_2/Groups)-nrow(Selection[complete.cases(Selection[,1:5]),])),]
-        Selection <- rbind(Selection, Selection4)
-      } else {
-        Selection4 <- Selection1
-        Selection <- rbind(Selection, Selection4)
-      }
-      # If not first iteration and this new bin (Selection4) has sites in it, BUT also has
-      # more than just one point to choose from....
-      if (k > 1 | j > 1 | i > 1 & nrow(Selection) > 1 & nrow(Selection4) > 1) {
-        # Designate select_function
-        select_fun <- function(Selection) {
-          Selection4 <- Selection1[sample(1:nrow(Selection1), (i*n_sites_2/Groups)-nrow(Selection[complete.cases(Selection[,1:5]),])),]
-          Selection <- rbind(Selection, Selection4)
-          return(Selection)
-        }
-        # Perform min distance check
-        Selection <- check_min_dist(Selection, min_distance = min_distance,
-                                    select_fun = select_fun)
-        # Perform max distance check
-        Selection <- check_max_dist(Selection, max_distance = max_distance, select_fun = select_fun)
-      }
-    }
-  }
+  # Cut terrain_df into bins
+  terrain_df <- terrain_df %>% 
+    dplyr::select(x, y, Dim.1, Dim.2, Dim.3) %>% 
+    # Cut dimensions into bins. And, coerce to character to make joining
+    # required_sites easier in the future
+    mutate(dim1_bin = as.character(cut(Dim.1, Groups)),
+           dim2_bin = as.character(cut(Dim.2, Groups)),
+           dim3_bin = as.character(cut(Dim.3, Groups))) %>% 
+    mutate(bin_string = paste(dim1_bin, dim2_bin, dim3_bin))
 }
+
+## ....If previous sites, remove these from ordination space --------
+
+
+# This will ensure that new sites chosen will be complementary to the the sites
+# already present in selected_sites
+
+if(any(!is.na(selected_sites))) {
+  # If required_sites already has bins, remove those from terrain_df
+  if (all(c("dim1_bin", "dim2_bin", "dim3_bin") %in% colnames(selected_sites))) {
+    selected_sites <- selected_sites %>% 
+      mutate(bin_string = paste(dim1_bin, dim2_bin, dim3_bin))
+    
+    # Remove bins represented by required_sites
+    terrain_toSample_df <- terrain_df %>% 
+      dplyr::filter(!bin_string %in% selected_sites$bin_string)
+  } else {
+    # If required_sites does not already has bins, join the bins, then remove
+    # them from terrain_df
+    selected_sites <- selected_sites %>% 
+      left_join(terrain_df %>% 
+                  dplyr::select(x, y, dim1_bin, dim2_bin, dim3_bin),
+                by = join_by(x, y, dim1_bin, dim2_bin, dim3_bin)) %>% 
+      mutate(bin_string = paste(dim1_bin, dim2_bin, dim3_bin))
+    
+    # Remove bins represented by required_sites
+    terrain_toSample_df <- terrain_df %>% 
+      dplyr::filter(!bin_string %in% selected_sites$bin_string)
+  }
+} else {
+  # If not re-running, then still need to create the terrain_toSample_df
+  terrain_toSample_df <- terrain_df
+}
+
+# Count the number of unique bins
+n_bins <- nrow(terrain_toSample_df %>% 
+  group_by(dim1_bin, dim2_bin, dim3_bin) %>% 
+  count() %>% 
+  ungroup())
+
+# Determine number of new sites to be added (if some sites already required/selected)
+if(any(!is.na(selected_sites))) {
+  n_sites_new <- n_sites - nrow(selected_sites)
+} else {
+  n_sites_new <- n_sites 
+}
+
+
+# Determine the number of samples we can afford to take from each bin
+sample_size <- floor(n_sites_new / n_bins)
+
+if (sample_size < 1) {
+  cat("You did not specify enough sites in order to sample evenly across your target landscape...provided locations will be uneven sampling. \n")
+  
+  # Don't let sample_size be 0
+  sample_size <- 1
+}
+
+# Report to user
+cat("There are", n_bins, "equal-volume bins of environmental space present within your landscape. With", n_sites_new, "sites, you are able to sample", sample_size, "sites per bin.\n")
+
+# Perform sampling
+selected_sites <- terrain_toSample_df %>% 
+  group_by(dim1_bin, dim2_bin, dim3_bin) %>% 
+  sample_n(sample_size) %>% 
+  ungroup() %>% 
+  bind_rows(selected_sites)
+
+# Check that all sites are below maximum distance
+selected_sites <- check_max_dist(selected_sites, max_distance, attempts = 10, recur = 0)
+# Check that all sites are above minimum distance
+selected_sites <- check_min_dist(selected_sites, min_distance, attempts = 10, recur = 0)
 
 cat("COMPLETED SITE SELECTION.\n")
 
 ## ....Checks on sites -------------
 
 # Summarize distances between sites
-dis_spatial <- dist(dplyr::select(Selection, x, y), method = "euclidean")
+dis_spatial <- dist(dplyr::select(selected_sites, x, y), method = "euclidean")
 dist_df <- as.data.frame(as.matrix(dis_spatial))
 
 # Find any rows (sites) that have any distances less than min_distance
@@ -488,7 +501,7 @@ if (nrow(close_df) > 0) {
 You can investigate these sites separately in the file /data/chosen_sites/diagnostics/close_coords.csv.\n")
 
   # Find coordinates for too-near sites
-  close_coords <- Selection %>% 
+  close_coords <- selected_sites %>% 
     dplyr::slice(which(colnames(close_df) %in% rownames(close_df)))
 
   write_csv(close_coords, paste0("data/chosen_sites/diagnostics/", filepattern, "close_coords.csv"))
@@ -508,41 +521,98 @@ if (nrow(far_df) > 0) {
 You can investigate these sites separately in the file /data/chosen_sites/diagnostics/far_coords.csv.\n")
   
   # Find coordinates for too-near sites
-  far_coords <- Selection %>% 
+  far_coords <- selected_sites %>% 
     dplyr::slice(which(colnames(far_df) %in% rownames(far_df)))
   
   write_csv(far_coords, paste0("data/chosen_sites/diagnostics/", filepattern, "far_coords.csv"))
 }
 
-Selection<-Selection[complete.cases(Selection[,1:5]),]
 
-#if  still not enough sites to go to the final requested number, just fill up with random sites
-if(nrow(Selection[complete.cases(Selection[,1:5]),])<n_sites){
-  cat("NOTE: you only need", nrow(Selection), "sites to represent environmental variance throughout this landscape, but choosing more to reach", n_sites, "sites.\n")
-    Selection4 <- terrain_df[sample(1:nrow(terrain_df), n_sites-nrow(Selection[complete.cases(Selection[,1:5]),])),]
-    Selection <- rbind(Selection, Selection4)
-    # If not first iteration and this new bin (Selection4) has sites in it....
-    if (k > 1 | j > 1 | i > 1 & nrow(Selection) > 1 & nrow(Selection4) > 0) {
-      # Designated selection function
-      select_fun <- function(Selection) {
-        Selection4 <- terrain_df[sample(1:nrow(terrain_df), n_sites-nrow(Selection[complete.cases(Selection[,1:5]),])),]
-        Selection <- rbind(Selection, Selection4)
-        return(Selection)
-      }
-      
-      # Perform min distance check
-      Selection <- check_min_dist(Selection, min_distance, select_fun = select_fun)
-      # Perform max distance check
-      Selection <- check_max_dist(Selection, max_distance, select_fun = select_fun)
-      
-    }
+# If still not enough sites to go to the final requested number, just fill up with random sites
+if(nrow(selected_sites) < n_sites_new){
+  
+  ans1 <- readline(paste0(
+    "NOTE: only need ", nrow(selected_sites), 
+    " sites to represent environmental variance in this landscape. Do you want ", 
+    n_sites_new - nrow(selected_sites), " more sites to bring your total to ",
+                          n_sites_new, "? (Y/N): "))
+  
+  if (tolower(ans1) %in% c("y", "yes")) {
+    cat("Choosing", n_sites_new - nrow(selected_sites), "more sites.\n")
+    
+    # Perform sampling
+    selected_sites <- terrain_toSample_df %>% 
+      sample_n(n_sites_new - nrow(selected_sites)) %>% 
+      ungroup() %>% 
+      bind_rows(selected_sites)
+    
+    # Check that all sites are below maximum distance
+    selected_sites <- check_max_dist(selected_sites, max_distance, attempts = 10, recur = 0)
+    # Check that all sites are above minimum distance
+
+  }
+  if (tolower(ans1) %in% c("n", "no")) {
+    cat("Not choosing any more sites, providing", nrow(selected_sites), "sites.\n")
+  }
 }
 
 
+## Add environmental data back in to selected_sites -------------
+
+selected_sites <- selected_sites %>% 
+  # Must keep bin values
+  dplyr::select(x, y, dim1_bin, dim2_bin, dim3_bin) %>% 
+  # Also add in ordination dimension values
+  left_join(terrain_df)
+
+selected_sites <- selected_sites %>% 
+  rownames_to_column() %>% 
+  left_join(
+    terra::extract(layers, selected_sites %>% dplyr::select(x, y), xy = T, ID = FALSE) %>% 
+      rownames_to_column() %>% 
+      dplyr::select(-x, -y)
+  ) %>% 
+  dplyr::select(-rowname)
+  
+# If landcover included, join back landcover class names
+  if ("landcover" %in% chosen_layers) {
+    selected_sites <- selected_sites %>% 
+      dplyr::rename(ungrouped_number = landcover) %>% 
+      left_join(landcover_link %>% 
+                  dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>% 
+                  dplyr::select(landcover, landcover_class, ungrouped_number), by = join_by(ungrouped_number)) %>%
+      dplyr::select(-ungrouped_number)
+  }
+
+## Reorder columns
+selected_sites <- selected_sites %>% 
+  dplyr::select(x, y, Dim.1, Dim.2, Dim.3, dim1_bin, dim2_bin, dim3_bin, everything())
+
 ## Write out CSV of selected sites -----------
 
-write_csv(Selection, paste0("data/chosen_sites/selected_sites_", n_sites, "_",
-                            filepattern, ".csv"))
+if (file.exists(paste0("data/chosen_sites/selected_sites_", n_sites, "_",
+                       filepattern, ".csv"))) {
+  ans1 <- readline(paste0("File ", 
+                          paste0("data/chosen_sites/selected_sites_", n_sites, "_",
+                                 filepattern, ".csv"), 
+                          " already exists. Overwrite? (Y/N): "))
+  
+  if (tolower(ans1) %in% c("y", "yes")) {
 
-cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", n_sites, "_",
-                                                        filepattern, ".csv"))
+    write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", n_sites, "_",
+                                 filepattern, ".csv"))
+    write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_", n_sites, "_",
+                                filepattern, ".csv"))
+    cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", n_sites, "_",
+                                                                filepattern, ".csv"))
+  }
+  if (tolower(ans1) %in% c("n", "no")) {
+    cat("File not overwritten, but selected sites still availabile in object `selected_sites`.\n")
+  }
+} else {
+  write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", n_sites, "_",
+                               filepattern, ".csv"))
+  write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_", n_sites, "_",
+                              filepattern, ".csv"))
+}
+
