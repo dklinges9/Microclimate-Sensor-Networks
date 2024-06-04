@@ -24,6 +24,16 @@ layers <- rast(paste0("data/spatial_drivers/combined/layers_",
                       round(chosen_rez, 4), "_", filepattern, ".tif"))
 
 
+## Exclude any masked cells -------------
+
+if (any(class(layer_mask) == "SpatRaster")) {
+  # Resample 
+  layer_mask2 <- terra::resample(layer_mask, layers, method = "near")
+  
+  # Mask `layers`
+  layers <- terra::mask(layers, layer_mask2, maskvalues = 0, updatevalue=NA)
+}
+
 ## Extract sites from raster grids -----------
 
 layers_df <- as.data.frame(layers[[1]], xy = T)
@@ -31,16 +41,18 @@ layers_df <- layers_df %>%
   dplyr::select(x, y)
 
 ## Add in required sites, if any
-if(any(!is.na(required_sites))) {
+if (any(!is.na(required_sites))) {
   layers_df <- layers_df %>% 
     bind_rows(dplyr::select(required_sites, x, y)) %>% 
     distinct(x, y)
 }
 
+# Automatically removes cells that are NA across all layers
 layers_df <- terra::extract(layers, layers_df, xy = T, ID = FALSE)
 
 # Remove rows with NA
-layers_df <- layers_df[complete.cases(layers_df),]
+layers_df <- layers_df %>% 
+  filter_all(~complete.cases(.))
 
 ## Recode landcover as factor -----------
 if ("landcover" %in% chosen_layers) {
@@ -316,7 +328,8 @@ if (program_rerun) {
       \n")
     
     cat("Saving Eigen values docs/analysis/....\n")
-    write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, "_FAMD_eigen_vals.csv"))
+    write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, 
+                                                "_", n_sites, "_FAMD_eigen_vals.csv"))
     
     cat("\n
       \n")
@@ -325,7 +338,7 @@ if (program_rerun) {
     
     cat("Saving scree plot to figures/analysis/....\n")
     ggsave(plot = scree_plot, filename = paste0("figures/analysis/", filepattern,
-                                                "_FAMD_screeplot.png"),
+                                                "_", n_sites, "_FAMD_screeplot.png"),
            height = 5, width = 6)
     
     cat("Add FAMD coordinates to our dataframe of spatial drivers...\n")
@@ -352,7 +365,8 @@ if (program_rerun) {
       \n")
     
     cat("Saving Eigen values docs/analysis/....\n")
-    write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, "_FAMD_eigen_vals.csv"))
+    write_csv(as.data.frame(eigen_vals), paste0("docs/analysis/", filepattern, 
+                                                "_", n_sites, "_FAMD_eigen_vals.csv"))
     
     cat("\n
       \n")
@@ -361,7 +375,7 @@ if (program_rerun) {
     
     cat("Saving scree plot to figures/analysis/....\n")
     ggsave(plot = scree_plot, filename = paste0("figures/analysis/", filepattern,
-                                                "_PCA_screeplot.png"),
+                                                "_", n_sites, "_PCA_screeplot.png"),
            height = 5, width = 6)
     
     cat("Add PCA coordinates to our dataframe of spatial drivers...\n")
@@ -470,9 +484,12 @@ cat("There are", n_bins, "equal-volume bins of environmental space present withi
 # Perform sampling
 selected_sites <- terrain_toSample_df %>% 
   group_by(dim1_bin, dim2_bin, dim3_bin) %>% 
-  sample_n(sample_size) %>% 
+  sample_n(sample_size, replace = TRUE) %>% 
   ungroup() %>% 
   bind_rows(selected_sites)
+
+# Remove redundant coordinates
+selected_sites <- distinct(selected_sites)
 
 # Check that all sites are below maximum distance
 selected_sites <- check_max_dist(selected_sites, max_distance, attempts = 10, recur = 0)
@@ -498,13 +515,15 @@ close_df <- dist_df %>%
 if (nrow(close_df) > 0) {
   cat("There are", nrow(close_df), "sites that are closer to at least one other site than your specified min_distance, as there were no other sites to choose from that represented environmental space as well as these.
   
-You can investigate these sites separately in the file /data/chosen_sites/diagnostics/close_coords.csv.\n")
+You can investigate these sites separately in the file", paste0("data/chosen_sites/diagnostics/", filepattern, 
+                                 "_", n_sites, "_close_coords.csv"), "\n")
 
   # Find coordinates for too-near sites
   close_coords <- selected_sites %>% 
     dplyr::slice(which(colnames(close_df) %in% rownames(close_df)))
 
-  write_csv(close_coords, paste0("data/chosen_sites/diagnostics/", filepattern, "close_coords.csv"))
+  write_csv(close_coords, paste0("data/chosen_sites/diagnostics/", filepattern, 
+                                 "_", n_sites, "_close_coords.csv"))
 }
 
 # Find any rows (sites) that have all distances greater than max_distance
@@ -524,7 +543,8 @@ You can investigate these sites separately in the file /data/chosen_sites/diagno
   far_coords <- selected_sites %>% 
     dplyr::slice(which(colnames(far_df) %in% rownames(far_df)))
   
-  write_csv(far_coords, paste0("data/chosen_sites/diagnostics/", filepattern, "far_coords.csv"))
+  write_csv(far_coords, paste0("data/chosen_sites/diagnostics/", filepattern, 
+                               "_", n_sites, "_far_coords.csv"))
 }
 
 
@@ -563,14 +583,16 @@ selected_sites <- selected_sites %>%
   # Must keep bin values
   dplyr::select(x, y, dim1_bin, dim2_bin, dim3_bin) %>% 
   # Also add in ordination dimension values
-  left_join(terrain_df)
+  left_join(terrain_df, by = join_by(x, y, dim1_bin, dim2_bin, dim3_bin))
 
+# Given that the coordinates from terra::extract() may not be exact, we will
+# join according to rownames, rather than coordinates
 selected_sites <- selected_sites %>% 
   rownames_to_column() %>% 
   left_join(
     terra::extract(layers, selected_sites %>% dplyr::select(x, y), xy = T, ID = FALSE) %>% 
       rownames_to_column() %>% 
-      dplyr::select(-x, -y)
+      dplyr::select(-x, -y), by = join_by(rowname)
   ) %>% 
   dplyr::select(-rowname)
   
@@ -590,29 +612,28 @@ selected_sites <- selected_sites %>%
 
 ## Write out CSV of selected sites -----------
 
-if (file.exists(paste0("data/chosen_sites/selected_sites_", n_sites, "_",
-                       filepattern, ".csv"))) {
+if (file.exists(paste0("data/chosen_sites/selected_sites_",
+                       filepattern, "_", n_sites, ".csv"))) {
   ans1 <- readline(paste0("File ", 
-                          paste0("data/chosen_sites/selected_sites_", n_sites, "_",
-                                 filepattern, ".csv"), 
+                          paste0("data/chosen_sites/selected_sites_",
+                                 filepattern, "_", n_sites, ".csv"), 
                           " already exists. Overwrite? (Y/N): "))
   
   if (tolower(ans1) %in% c("y", "yes")) {
 
-    write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", n_sites, "_",
-                                 filepattern, ".csv"))
-    write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_", n_sites, "_",
-                                filepattern, ".csv"))
-    cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", n_sites, "_",
-                                                                filepattern, ".csv"))
+    write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", filepattern,
+                                 "_", n_sites, ".csv"))
+    write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_",
+                                     filepattern, "_", n_sites, ".csv"))
+    cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", filepattern, "_", n_sites, ".csv"))
   }
   if (tolower(ans1) %in% c("n", "no")) {
     cat("File not overwritten, but selected sites still availabile in object `selected_sites`.\n")
   }
 } else {
-  write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", n_sites, "_",
-                               filepattern, ".csv"))
-  write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_", n_sites, "_",
-                              filepattern, ".csv"))
+  write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", 
+                               filepattern, "_", n_sites, ".csv"))
+  write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_",
+                              filepattern, "_", n_sites, ".csv"))
 }
 
