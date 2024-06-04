@@ -70,11 +70,89 @@ if (projection_units == "m") {
   }
 }
 
-power_vars <- c(n_sensors, r2, power, sum(ifelse(is.na(chosen_layers), NA, 1)))
+if (is.na(backup_percent) | is.null(backup_percent)) {
+  cat("backup_percent was left as NA or NULL. Setting to 0.15\n")
+}
+
+if (backup_percent < 0 | backup_percent > 0.5) {
+  stop("Accepted values for backup_percent range from 0 to 0.5.")
+}
+
+## Check custom layers --------------------
+if (any(complete.cases(custom_layers))) {
+  custom_layers_test <- lapply(custom_layers, function(l) {
+    if (file.exists(l)) {
+      r <- try(terra::rast(l), silent = T)
+      if (any(class(r) == "try-error")) {
+        stop("Could not read file for custom layer ", l, ". Is this a geoTIFF?")
+      }
+      
+      # Check projection of custom layer
+      if (gsub(" \\+no_defs", "", terra::crs(r, proj = T)) != 
+          gsub(" \\+no_defs", "", projection)) {
+        stop("Projection for custom layer ", l, 
+             "does not match the specified `projection`.")
+      }
+      
+      # Check extent of custom layer
+      foo <- terra::rast(ext = spatial_extent, crs = projection)
+      
+      i <- try(terra::intersect(foo, r), silent = T)
+      
+      if (any(class(i) == "try-error")) {
+        stop("Extent for custom layer ", l, " does not seem to fall within your specified `spatial_extent`.")
+      }
+      
+      return(l)
+    } else {
+      cat("No file found for filepath", l, "so ignoring.\n")
+      return(NA)
+    }
+  })
+  
+  ## Subset custom_layers_names
+  custom_layers_names <- custom_layers_names[!is.na(custom_layers_test)]
+  ## Subset custom_layers
+  custom_layers_test <- custom_layers_test[!is.na(custom_layers_test)]
+  
+  chosen_layers <- c(chosen_layers,  custom_layers_names)
+}
+
+if (!is.null(power)) {
+  if (is.na(power)) {
+    power <- NULL
+  }
+}
+
+if (!is.null(r2)) {
+  if (is.na(r2)) {
+    r2 <- NULL
+  }
+}
+
+power_vars <- c(n_sites, r2, power, sum(c(ifelse(is.na(chosen_layers), NA, 1))))
 power_vars <- power_vars[complete.cases(power_vars)]
 
-  if (length(power_vars) < 3) {
-    stop("You must provide values for at least three of the following four inputs: `n_sensors`, `power`, `r2`, and `chosen_layers` (set_parameters.R; L20, L72, L79, L82)")
+  if (length(power_vars) != 3) {
+    stop("You must provide values for three, and only three, of the following four inputs (i.e. one left as NA): `n_sites`, `power`, `r2`, and `chosen_layers` (set_parameters.R; L20, L72, L79, L82)")
   }
+
+## Check program re-run specifications ---------
+
+if (any(complete.cases(landscape_bins))) {
+  if (!is.data.frame(landscape_bins)) {
+    stop("If object `landscape_bins` is not NA, must be a data.frame")
+  } 
+}
+
+if (program_rerun) {
+  
+  if (!is.data.frame(landscape_bins)) {
+    stop("If program_rerun == TRUE, then `landscape_bins` must be a data.frame")
+  } 
+  if (!any(c("x", "y", "dim1_bin", "dim2_bin", "dim3_bin") %in% colnames(landscape_bins))) {
+    stop("`landscape_bins` must have the following columns: x, y, dim1_bin, dim2_bin, dim3_bin")
+  }
+}
 
 cat("Checking parameters - OK!\n")
