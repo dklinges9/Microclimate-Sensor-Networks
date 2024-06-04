@@ -16,7 +16,8 @@ if (complete.cases(landscape_name)) {
 
 ## ....Load in files ---------
 
-layers <- rast("data/spatial_drivers/combined/layers_4e-04_amba2.tif")
+layers <- rast(paste0("data/spatial_drivers/combined/layers_",
+                      round(chosen_rez, 4), "_", filepattern, ".tif"))
 
 ## Data Curation for visuals ----------
 
@@ -67,7 +68,7 @@ maps <- lapply(chosen_layers, function(foo) {
     # Save out file
     cat("Saving map for", foo, "...\n")
     ggsave(plot = map, filename = paste0("figures/point_selection/", foo, 
-                                         "_", filepattern,
+                                         "_", filepattern, "_", n_sites, 
                                          "_map.png"),
            # Landcover map wider width to provide room for class names
            height = 5, width = 8)
@@ -82,7 +83,7 @@ maps <- lapply(chosen_layers, function(foo) {
     # Save out file
     cat("Saving map for", foo, "...\n")
     ggsave(plot = map, filename = paste0("figures/point_selection/", foo, 
-                                         "_", filepattern,
+                                         "_", filepattern, "_", n_sites, 
                                          "_map.png"),
            height = 5, width = 6)
   }
@@ -117,7 +118,8 @@ histogram_plots <- ggplot() +
         axis.title.y.right = element_text(colour="blue")) +
   facet_wrap(~chsen_layers, scales = "free_x")
 
-ggsave(histogram_plots, filename = paste0("figures/point_selection/", filepattern, "histograms.png"),
+ggsave(histogram_plots, filename = paste0("figures/point_selection/", 
+                                          filepattern, "_", n_sites, "_histograms.png"),
        height = 5, width = 5)
 
 ## ....Environmental space scatter plots ----------------
@@ -145,7 +147,8 @@ for (x_layer in chosen_layers2) {
     # Save out file
     cat("Saving scatterplot for", x_layer,  "vs", y_layer, "...\n")
     ggsave(plot = scatterplot, filename = paste0("figures/point_selection/", x_layer, "_vs_",
-                                                 y_layer, "_", filepattern, ".png"),
+                                                 y_layer, "_", filepattern, 
+                                                 "_", n_sites, ".png"),
            height = 5, width = 5)
   }
   
