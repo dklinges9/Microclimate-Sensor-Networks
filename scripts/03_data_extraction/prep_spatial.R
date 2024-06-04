@@ -140,10 +140,11 @@ if (continue) {
   ## Combine layers into single spatRaster stack -----------
   
   # Get chosen layers (minus the custom layer names) as a list
-  chosen_layers_list <- mget(chosen_layers[chosen_layers != custom_layers_names])
-  
   if (any(complete.cases(custom_layers_test))) {
+    chosen_layers_list <- mget(chosen_layers[chosen_layers != custom_layers_names])
     chosen_layers_list <- c(chosen_layers_list, custom_layers_r)
+  } else {
+    chosen_layers_list <- mget(chosen_layers)
   }
   
   # Get resolutions of all chosen layers

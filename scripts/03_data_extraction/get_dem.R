@@ -70,6 +70,6 @@ if (continue) {
                 paste0(round(chosen_rez, 4), "_", filepattern))
   }  
   
-  cat("Slope and aspect - OK!")
+  cat("Topographic variables - OK!")
   
 }
