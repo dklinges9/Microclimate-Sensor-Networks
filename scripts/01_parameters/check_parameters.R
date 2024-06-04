@@ -2,6 +2,7 @@
 
 cat("Checking parameters...\n")
 
+## Spatial parameters ------------
 if (any(is.na(spatial_extent))) {
   if (all(is.na(c(extent_rast, extent_shp)))) {
     stop("If no spatial extent was provided, you need to provide a path to a raster or shapefile (set_parameters.R; L36).\n")
@@ -70,15 +71,7 @@ if (projection_units == "m") {
   }
 }
 
-if (is.na(backup_percent) | is.null(backup_percent)) {
-  cat("backup_percent was left as NA or NULL. Setting to 0.15\n")
-}
-
-if (backup_percent < 0 | backup_percent > 0.5) {
-  stop("Accepted values for backup_percent range from 0 to 0.5.")
-}
-
-## Check custom layers --------------------
+## Check custom layers and layer mask --------------------
 if (any(complete.cases(custom_layers))) {
   custom_layers_test <- lapply(custom_layers, function(l) {
     if (file.exists(l)) {
@@ -116,7 +109,32 @@ if (any(complete.cases(custom_layers))) {
   custom_layers_test <- custom_layers_test[!is.na(custom_layers_test)]
   
   chosen_layers <- c(chosen_layers,  custom_layers_names)
+} else {
+  custom_layers_test <- NA
 }
+
+if (any(class(layer_mask) != "SpatRaster")) {
+  if (all(!is.na(layer_mask))) {
+    stop("`layer_mask` must either by a SpatRaster or NA.")
+  }
+}
+
+if (any(class(layer_mask) == "SpatRaster")) {
+  if (!any(terra::values(layer_mask) %in% c(0,1))) {
+    stop("All values of `layer_mask` must be either 0 or 1.")
+  }
+  
+  # Check extent of layer_mask
+  foo <- terra::rast(ext = spatial_extent, crs = projection)
+  
+  i <- try(terra::intersect(foo, layer_mask), silent = T)
+  
+  if (any(class(i) == "try-error")) {
+    stop("Extent for `layer_mask` does not seem to fall within your specified `spatial_extent`.")
+  }
+}
+
+## Power analysis parameters -----------
 
 if (!is.null(power)) {
   if (is.na(power)) {
