@@ -7,9 +7,15 @@ _scripts/main.R_
 Used to run all steps in the program, in their appropriate sequence.  
 
 #### Set Parameters
-_scripts/00_paremeters/set_parameters.R_  
+_scripts/00_parameters/set_parameters.R_  
 
 Requires *user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on.  
+
+
+#### Set Parameters
+_scripts/00_source/functions.R_  
+
+Source code used internally to support other scripts. Do not modify. 
 
 
 #### Check Parameters
@@ -17,22 +23,22 @@ _scripts/00_parameters/check_parameters.R_
 
 Checks all user parameter inputs to confirm they meet program standards.  
 
+
+#### Power Analysis
+_scripts/01_power_analysis/power_analysis.R_  
+
+Performs a test of the statistical power of a study design based upon chosen number of spatial drivers and sample size (i.e. number of sensors).  
+
+
 #### Get DEM
-_scripts/01_data_extraction/get_dem.R_  
+_scripts/02_data_extraction/get_dem.R_  
 
 Downloads a DEM for a desired spatial extent and desired spatial resolution.  
 
 #### Prep Spatial data
-_scripts/01_data_extraction/prep_spatial.R_  
+_scripts/02_data_extraction/prep_spatial.R_  
 
 Preps spatial data for spatial environmental drivers to be used in point selection and visualization scripts.  
-
-
-#### Power Analysis
-_scripts/02_power_analysis/power_analysis.R_  
-
-Performs a test of the statistical power of a study design based upon chosen number of spatial drivers and sample size (i.e. number of sensors).  
-
 
 #### Site Selection
 _scripts/03_site_selection/site_selection.R_  
