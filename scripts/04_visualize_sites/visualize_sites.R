@@ -14,16 +14,22 @@ if (complete.cases(landscape_name)) {
   filepattern <- paste(round(spatial_extent, 0), collapse = "_")
 }
 
+## ....Load in files ---------
+
+layers <- rast("data/spatial_drivers/combined/layers_4e-04_amba2.tif")
+
 ## Data Curation for visuals ----------
 
 layers_df_tall <- layers_df %>% 
   left_join(landcover_link %>% 
-              dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>% 
+              dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>%
+              mutate(landcover = as.factor(landcover)) %>% 
               dplyr::distinct(landcover, landcover_class, hex_color), by = join_by(landcover, landcover_class)) %>% 
+  # Convert landcover back to numeric for plotting purposes
+  mutate(landcover = as.double(landcover)) %>%
   pivot_longer(all_of(chosen_layers), names_to = "chsen_layers", values_to = "vals")
 
 ## Color palettes --------
-
 
 ## ....For landcover ----------------
 # Filter to just landcover classes that are present 
@@ -54,7 +60,7 @@ maps <- lapply(chosen_layers, function(foo) {
     map <- ggplot(data = df, aes(x, y)) +
       geom_point(aes(color = landcover_class)) +
       scale_color_manual(values = landcover_colors) +
-      geom_point(data = Selection, aes(x, y)) +
+      geom_point(data = selected_sites, aes(x, y)) +
       labs(color = "") +
       theme_void()
     
@@ -69,7 +75,7 @@ maps <- lapply(chosen_layers, function(foo) {
     map <- ggplot(data = df, aes(x, y)) +
       geom_raster(aes(fill = vals), alpha = 0.7) +
       scale_fill_viridis(option = viridis_pals[count]) +
-      geom_point(data = Selection, aes(x, y)) +
+      geom_point(data = selected_sites, aes(x, y)) +
       labs(color = "") +
       theme_void()
     
@@ -84,18 +90,21 @@ maps <- lapply(chosen_layers, function(foo) {
 
 ## ....Distribution of Environmental Layers -----------
 
+# Multiply selection by a scale factor
+multi_factor <- dim(layers)[1] * dim(layers)[2] / n_sites * .75
 
-# Multiply selection by 100
-multi_factor <- length(terra::values(elevation)) / n_sites * .75
-selection_multi <- do.call("rbind", replicate(multi_factor, Selection, simplify = FALSE))
+selected_sites_multi <- do.call("rbind", replicate(multi_factor, 
+                                              selected_sites %>% 
+                                                mutate(landcover = as.double(landcover)),
+                                              simplify = FALSE))
 
-selection_multi_tall <- selection_multi %>% 
+selected_sites_multi_tall <- selected_sites_multi %>% 
   dplyr::select(all_of(chosen_layers)) %>% 
   pivot_longer(everything(), names_to = "chsen_layers", values_to = "vals")
 
 histogram_plots <- ggplot() +
   geom_histogram(data = layers_df_tall, aes(vals), bins = 30) +
-  geom_histogram(data = selection_multi_tall, aes(vals), bins = 30, 
+  geom_histogram(data = selected_sites_multi_tall, aes(vals), bins = 30, 
                  fill = "blue", alpha = 0.7) +
   scale_y_continuous(
     # Features of the first axis
@@ -106,7 +115,7 @@ histogram_plots <- ggplot() +
   theme_bw() +
   theme(axis.text.y.right = element_text(colour="blue"),
         axis.title.y.right = element_text(colour="blue")) +
-  facet_wrap(~chsen_layers, scales = "free_x"); 
+  facet_wrap(~chsen_layers, scales = "free_x")
 
 ggsave(histogram_plots, filename = paste0("figures/point_selection/", filepattern, "histograms.png"),
        height = 5, width = 5)
@@ -114,15 +123,21 @@ ggsave(histogram_plots, filename = paste0("figures/point_selection/", filepatter
 ## ....Environmental space scatter plots ----------------
 
 chosen_layers2 <- chosen_layers
+# Everything except land cover
+if ("landcover" %in% chosen_layers2) {
+  chosen_layers2 <- chosen_layers2[!chosen_layers2 == "landcover"]
+}
+
 for (x_layer in chosen_layers2) {
+
   y_layers <- chosen_layers2[!chosen_layers2 == x_layer]
   
   for (y_layer in y_layers) {
     
     scatterplot <- ggplot(data = layers_df, aes(x = !!sym(x_layer), y = !!sym(y_layer))) +
       geom_point(size=0.2,pch=16,alpha=0.1) +
-      geom_point(data=Selection,size=1,pch=3) +
-      geom_point(data=Selection,size=0.5,col="red") +
+      geom_point(data=selected_sites,size=1,pch=3) +
+      geom_point(data=selected_sites,size=0.5,col="red") +
       theme_classic() +
       labs(x = x_layer,
            y = y_layer)
