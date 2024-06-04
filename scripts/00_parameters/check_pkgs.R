@@ -5,7 +5,7 @@ cat("Checking installed packages\n")
 
 # list all required packages for the scripts to run
 pkgs <- c("tidyverse", "elevatr", "rnoaa", "microclima", "raster", "terra", "landscapemetrics",
-          "pwr", "sf", "factoextra", "ggplot2", "RColorBrewer", "viridis")
+          "pwr", "sf", "factoextra", "FactoMineR", "ggplot2", "RColorBrewer", "viridis")
 
 # find the packages that have not yet been installed on the device
 new_pkgs <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
@@ -55,9 +55,15 @@ if (length(new_pkgs) == 0) {
   # if, for some reason, packages were not installed -> issue warning
   if (new_pkgs[(!new_pkgs %in% installed.packages()[,"Package"])] |> length() != 0) {
     warning("Not all required packages have been installed on your device.")
-  } else cat("All required packages have been installed succesfully.")
+  } else cat("All required packages have been installed succesfully.\n")
   
+  # Garbage collect
+  gc()
+  
+  cat("We recommend restarting your R session (Session > Restart R).\n")
+  
+  rm(list = c("ans1", "ans2"))
 }
 
-# clean enviromnent and restart R 
-rm(list = ls()); gc()
+# clean environment  
+rm(list = c("pkgs", "new_pkgs"))
