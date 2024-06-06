@@ -108,7 +108,7 @@ if (any(complete.cases(custom_layers))) {
   ## Subset custom_layers
   custom_layers_test <- custom_layers_test[!is.na(custom_layers_test)]
   
-  chosen_layers <- c(chosen_layers,  custom_layers_names)
+  chosen_layers <- c(chosen_layers, custom_layers_names)
 } else {
   custom_layers_test <- NA
 }

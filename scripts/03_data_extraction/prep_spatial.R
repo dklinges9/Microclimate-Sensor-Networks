@@ -55,15 +55,7 @@ if (continue) {
   }
   
   ## .... Import data layers ------------
-  
-  if ("proportion_forest" %in% chosen_layers) {
-    ## Hansen global forest change layers
-    hansen_lastYear_scene <- terra::rast("data/environmental/vegetation/global_forest_change/original/Hansen_GFC-2020-v1.8_last_20S_040E.tif")
-    hansen_firstYear_scene <- terra::rast("data/environmental/vegetation/global_forest_change/original/Hansen_GFC-2020-v1.8_treecover2000_20S_040E.tif")
-    hansen_lossyear <- terra::rast("data/environmental/vegetation/global_forest_change/original/Hansen_GFC-2020-v1.8_lossyear_20S_040E.tif")
-  }
-  
-  
+
   ## Topography 
   if ("elevation" %in% chosen_layers) {
     elevation <- terra::rast(paste0("data/spatial_drivers/topography/derivative/dem_", 

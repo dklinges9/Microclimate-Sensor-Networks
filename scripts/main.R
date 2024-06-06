@@ -6,8 +6,8 @@
 
 
 ## If running the program for the first time: run these lines of code
-## We encourage stepping through each of these `source()` calls one at a time,
-## as warnings / errors introduced in some steps may cause downstream issues
+## Please execute each of these lines of code one at a time, as some scripts
+## require user input in the console
 source("scripts/00_source/functions.R")
 source("scripts/00_source/check_pkgs.R")
 source("scripts/01_parameters/set_parameters.R")
