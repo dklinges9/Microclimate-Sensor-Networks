@@ -62,7 +62,8 @@ if (length(new_pkgs) == 0) {
   
   cat("We recommend restarting your R session (Session > Restart R).\n")
   
-  rm(list = c("ans1", "ans2"))
+  # Attempt to remove both objects, suppress warnings
+  try(rm(list = c("ans1", "ans2")), silent = TRUE)
 }
 
 # clean environment  
