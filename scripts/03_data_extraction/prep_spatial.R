@@ -31,10 +31,19 @@ if (continue) {
   ## Workspace prep -----------
   
   ## .... Load dependencies ---------
-  library(tidyverse)
-  library(raster)
-  library(terra)
-  library(landscapemetrics)
+  pkgs <- c("raster", "terra", "landscapemetrics")
+  
+  for (i in seq_along(pkgs)) {
+    suppressPackageStartupMessages(
+      suppressWarnings(library(pkgs[i], character.only = TRUE))
+    )
+    if (i == length(pkgs)) { rm(pkgs, i) }
+  }
+  
+  # library(tidyverse)
+  # library(raster)
+  # library(terra)
+  # library(landscapemetrics)
   
   ## .... Temporary extent with buffer ---------
   

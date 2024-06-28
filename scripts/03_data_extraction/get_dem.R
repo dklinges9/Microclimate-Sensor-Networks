@@ -1,10 +1,16 @@
 ## David Klinges
 ## This script queries a DEM of desired resolution and extent
 
-library(elevatr)
-library(microclima)
-library(raster)
-library(terra)
+pkgs <- c("elevatr", "microclima", "raster", "terra")
+
+options("rgdal_show_exportToProj4_warnings"="none") # suppresses rgdal deprecation warning
+
+for (i in seq_along(pkgs)) {
+  suppressPackageStartupMessages(
+    suppressWarnings(library(pkgs[i], character.only = TRUE))
+  )
+  if (i == length(pkgs)) { rm(pkgs, i) }
+}
 
 # Confirm script should be run
 if (program_rerun) {
@@ -31,7 +37,8 @@ if (continue) {
   crs(spatial_extentr) <- projection
   
   cat("Getting DEM....\n")
-  dem <- rast(get_dem(r = raster(spatial_extentr), resolution = chosen_rez))
+  # dem <- rast(get_dem(r = raster(spatial_extentr), resolution = chosen_rez))
+  dem <- rast(get_dem(r = terra::rast(spatial_extentr), resolution = chosen_rez))
   
   # Specify string for naming output files
   if (complete.cases(landscape_name)) {

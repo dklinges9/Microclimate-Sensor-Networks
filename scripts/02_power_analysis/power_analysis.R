@@ -4,7 +4,7 @@
 
 ## 1. Workspace prep ---------------
 
-library(pwr)
+suppressWarnings(library(pwr))
 
 cat("Conducting power analysis...\n")
 
