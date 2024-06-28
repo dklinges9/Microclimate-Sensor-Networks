@@ -1,4 +1,3 @@
-## Stijn Van de Vondel
 ## This script checks whether all required packages have been installed
 
 cat("Checking installed packages\n")
