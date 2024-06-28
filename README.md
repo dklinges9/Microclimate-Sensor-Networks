@@ -1,6 +1,8 @@
 ## Microclimate Sensor Networks: Site Selection and Visualization Program
 
 
+![](img/Screenshot_1.png)
+
 #### **Main**
 _scripts/main.R_  
 
@@ -17,7 +19,7 @@ _scripts/00_source/check_pkgs.R_
 Checks that the user has all necessary R packages, whom is prompted to install missing 
 packages, if any. **Do not modify.**
 
-####* **Set Parameters**
+#### **Set Parameters**
 _scripts/01_parameters/set_parameters.R_  
 
 *Requires user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on.  
@@ -52,5 +54,4 @@ Performs selection of sensor sites that adequately represent environmental space
 _scripts/05_visualize_sites/visualize_sites.R_
 
 Generates maps of chosen sites over environmental layers, and other plots of distribution of environmental space and how it was sampled.  
-
 
