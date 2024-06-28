@@ -1,6 +1,8 @@
 
 
-# Saving rasters, but only after checking if already exists and if user wants to overwrite
+# A wrapper function for saving rasters, but only after checking if already exists and 
+# if user wants to overwrite. This prevents errors when running code out of the box,
+# thus stopping the data pipeline.
 save_raster <- function(rst, filepath, filepattern) {
   if (file.exists(paste0(filepath,
                          filepattern, ".tif"))) {
