@@ -135,6 +135,36 @@ if (any(class(layer_mask) == "SpatRaster")) {
 }
 
 ## Power analysis parameters -----------
+# Ensure values are numerical
+l_objects <- list(
+  budget = budget,
+  cost_per_sensor= cost_per_sensor,
+  n_sites = n_sites,
+  chosen_rez = chosen_rez, 
+  min_distance = min_distance,
+  max_distance = max_distance
+)
+
+l_objects <- suppressWarnings(lapply(l_objects, as.numeric))
+
+if (length(names(which(is.na(l_objects)))) > 0) {
+  stop(
+    "Following objects are non-numerical, please review user inputs in set_parameters.R: ",
+    paste(names(which(is.na(l_objects))), collapse = ", ")
+  )
+}
+
+rm(l_objects)
+
+# Ensure all values are numerical
+budget <- as.numeric(budget)
+cost_per_sensor <- as.numeric(cost_per_sensor)
+n_sites <- as.numeric(n_sites) # Perhaps integer?
+chosen_rez <- as.numeric(chosen_rez) # Perhaps integer?
+min_distance <- as.numeric(min_distance)
+max_distance <- as.numeric(max_distance)
+
+
 
 if (!is.null(power)) {
   if (is.na(power)) {
