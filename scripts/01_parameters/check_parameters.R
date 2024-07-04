@@ -2,6 +2,15 @@
 
 cat("Checking parameters...\n")
 
+## Naming parameters --------
+
+# Specify string for naming output files
+if (complete.cases(landscape_name)) {
+  filepattern <- landscape_name
+} else {
+  filepattern <- paste(round(spatial_extent, 0), collapse = "_")
+}
+
 ## Spatial parameters ------------
 if (any(is.na(spatial_extent))) {
   if (all(is.na(c(extent_rast, extent_shp)))) {
