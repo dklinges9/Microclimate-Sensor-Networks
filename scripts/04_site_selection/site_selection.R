@@ -5,13 +5,16 @@
 
 cat("\n\nPrepping data for site selection....\n")
 
-## .... Load dependencies ----------
 
-library(tidyverse)
-library(sf)
-library(terra)
-library(factoextra)
-library(FactoMineR)
+## .... Load dependencies ---------
+pkgs <- c("crayon", "dplyr", "readr", "sf", "terra", "factoextra", "FactoMineR")
+
+for (i in seq_along(pkgs)) {
+  suppressPackageStartupMessages(
+    suppressWarnings(library(pkgs[i], character.only = TRUE))
+  )
+  if (i == length(pkgs)) { rm(pkgs, i) }
+}
 
 # Specify string for naming output files
 if (complete.cases(landscape_name)) {
@@ -554,12 +557,11 @@ You can investigate these sites separately in the file /data/chosen_sites/diagno
 
 # If still not enough sites to go to the final requested number, just fill up with random sites
 if(nrow(selected_sites) < n_sites_new){
-  
-  ans1 <- readline(paste0(
-    "NOTE: only need ", nrow(selected_sites), 
-    " sites to represent environmental variance in this landscape. Do you want ", 
-    n_sites_new - nrow(selected_sites), " more sites to bring your total to ",
-                          n_sites_new, "? (Y/N): "))
+  cat(red("NOTE: only need ", nrow(selected_sites), 
+          " sites to represent environmental variance in this landscape. Do you want ", 
+          n_sites_new - nrow(selected_sites), " more sites to bring your total to ",
+          n_sites_new, "? (Y/N): "))
+  ans1 <- readline(" ")
   
   if (tolower(ans1) %in% c("y", "yes")) {
     cat("Choosing", n_sites_new - nrow(selected_sites), "more sites.\n")
@@ -618,10 +620,11 @@ selected_sites <- selected_sites %>%
 
 if (file.exists(paste0("data/chosen_sites/selected_sites_",
                        filepattern, "_", n_sites, ".csv"))) {
-  ans1 <- readline(paste0("File ", 
-                          paste0("data/chosen_sites/selected_sites_",
-                                 filepattern, "_", n_sites, ".csv"), 
-                          " already exists. Overwrite? (Y/N): "))
+  cat(red("File ", 
+          paste0("data/chosen_sites/selected_sites_",
+                 filepattern, "_", n_sites, ".csv"), 
+          " already exists. Overwrite? (Y/N): "))
+  ans1 <- readline(" ")
   
   if (tolower(ans1) %in% c("y", "yes")) {
 

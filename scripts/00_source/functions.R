@@ -6,10 +6,12 @@
 save_raster <- function(rst, filepath, filepattern) {
   if (file.exists(paste0(filepath,
                          filepattern, ".tif"))) {
-    ans1 <- readline(paste0("File ", 
-                            paste0(filepath,
-                                   filepattern, ".tif"), 
-                            " already exists. Overwrite? (Y/N): "))
+    cat(crayon::red("File ", 
+            paste0(filepath,
+                   filepattern, ".tif"), 
+            " already exists. Overwrite? (Y/N): "))
+    
+    ans1 <- readline(paste0(" "))
     
     if (tolower(ans1) %in% c("y", "yes")) {
       cat("File overwritten, continuing program.\n")

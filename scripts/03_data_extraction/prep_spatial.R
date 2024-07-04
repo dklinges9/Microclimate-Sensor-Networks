@@ -3,9 +3,22 @@
 # in order to generate a semi-stratified set of points at which to deploy 
 # microclimate loggers
 
+
+## .... Load dependencies ---------
+pkgs <- c("crayon", "readr", "raster", "terra", "landscapemetrics")
+
+for (i in seq_along(pkgs)) {
+  suppressPackageStartupMessages(
+    suppressWarnings(library(pkgs[i], character.only = TRUE))
+  )
+  if (i == length(pkgs)) { rm(pkgs, i) }
+}
+
+
 # Confirm script should be run
 if (program_rerun) {
-  ans1 <- readline(paste0("program_rerun set to TRUE, so you should not need to re-run prep_spatial.R. Do you wish to continue? (Y/N): "))
+  cat(red("program_rerun set to TRUE, so you should not need to re-run prep_spatial.R. Do you wish to continue? (Y/N): "))
+  ans1 <- readline(" ")
   
   if (!tolower(ans1) %in% c("n", "no", "y", "yes")) {
     stop("Inappropriate input. Must be one of: yes, YES, Y, y, no, NO, N, n.\n")
@@ -30,21 +43,6 @@ if (continue) {
   
   ## Workspace prep -----------
   
-  ## .... Load dependencies ---------
-  pkgs <- c("readr", "raster", "terra", "landscapemetrics")
-  
-  for (i in seq_along(pkgs)) {
-    suppressPackageStartupMessages(
-      suppressWarnings(library(pkgs[i], character.only = TRUE))
-    )
-    if (i == length(pkgs)) { rm(pkgs, i) }
-  }
-  
-  # library(tidyverse)
-  # library(raster)
-  # library(terra)
-  # library(landscapemetrics)
-  
   ## .... Temporary extent with buffer ---------
   
   if (projection_units == "dd") {
@@ -64,7 +62,7 @@ if (continue) {
   }
   
   ## .... Import data layers ------------
-
+  
   ## Topography 
   if ("elevation" %in% chosen_layers) {
     elevation <- terra::rast(paste0("data/spatial_drivers/topography/derivative/dem_", 
@@ -87,7 +85,7 @@ if (continue) {
   if ("landcover" %in% chosen_layers) {
     ## ESA CCI Land cover
     landcover_global <- terra::rast("data/spatial_drivers/landcover/original/esa_cci/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif")
-    landcover_link <- read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv")
+    landcover_link <- read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv", show_col_types = FALSE)
   }
   
   ## ....Import custom layers ------------

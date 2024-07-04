@@ -1,7 +1,7 @@
 ## David Klinges
 ## This script queries a DEM of desired resolution and extent
 
-pkgs <- c("elevatr", "microclima", "raster", "terra")
+pkgs <- c("crayon", "elevatr", "microclima", "raster", "terra")
 
 options("rgdal_show_exportToProj4_warnings"="none") # suppresses rgdal deprecation warning
 
@@ -14,7 +14,8 @@ for (i in seq_along(pkgs)) {
 
 # Confirm script should be run
 if (program_rerun) {
-  ans1 <- readline(paste0("program_rerun set to TRUE, so you should not need to re-run get_dem.R. Do you wish to continue? (Y/N): "))
+  cat(red("program_rerun set to TRUE, so you should not need to re-run get_dem.R. Do you wish to continue? (Y/N): "))
+  ans1 <- readline(" ")
   
   if (!tolower(ans1) %in% c("n", "no", "y", "yes")) {
     stop("Inappropriate input. Must be one of: yes, YES, Y, y, no, NO, N, n.\n")
@@ -33,18 +34,11 @@ if (program_rerun) {
 }
 
 if (continue) {
-  spatial_extentr <- terra::rast(ext(spatial_extent))
+  spatial_extentr <- terra::rast(ext(spatial_extent), resolution = chosen_rez)
   crs(spatial_extentr) <- projection
   
   cat("Getting DEM....\n")
   dem <- get_dem(r = terra::rast(spatial_extentr))
-  
-  # Specify string for naming output files
-  if (complete.cases(landscape_name)) {
-    filepattern <- landscape_name
-  } else {
-    filepattern <- paste(round(spatial_extent, 0), collapse = "_")
-  }
   
   cat("writing DEM...\n")
   # Save DEM file. But first, check if already exists and ask user if they
