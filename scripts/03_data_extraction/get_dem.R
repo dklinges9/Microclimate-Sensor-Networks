@@ -37,8 +37,7 @@ if (continue) {
   crs(spatial_extentr) <- projection
   
   cat("Getting DEM....\n")
-  # dem <- rast(get_dem(r = raster(spatial_extentr), resolution = chosen_rez))
-  dem <- rast(get_dem(r = terra::rast(spatial_extentr), resolution = chosen_rez))
+  dem <- get_dem(r = terra::rast(spatial_extentr))
   
   # Specify string for naming output files
   if (complete.cases(landscape_name)) {
