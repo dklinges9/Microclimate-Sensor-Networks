@@ -31,7 +31,7 @@ if (continue) {
   ## Workspace prep -----------
   
   ## .... Load dependencies ---------
-  pkgs <- c("raster", "terra", "landscapemetrics")
+  pkgs <- c("readr", "raster", "terra", "landscapemetrics")
   
   for (i in seq_along(pkgs)) {
     suppressPackageStartupMessages(
