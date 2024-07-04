@@ -7,20 +7,13 @@ cat("\n\nPrepping data for site selection....\n")
 
 
 ## .... Load dependencies ---------
-pkgs <- c("crayon", "dplyr", "tibble", "readr", "sf", "terra", "factoextra", "FactoMineR")
+pkgs <- c("crayon", "dplyr", "magrittr", "tibble", "readr", "sf", "terra", "factoextra", "FactoMineR")
 
 for (i in seq_along(pkgs)) {
   suppressPackageStartupMessages(
     suppressWarnings(library(pkgs[i], character.only = TRUE))
   )
   if (i == length(pkgs)) { rm(pkgs, i) }
-}
-
-# Specify string for naming output files
-if (complete.cases(landscape_name)) {
-  filepattern <- landscape_name
-} else {
-  filepattern <- paste(round(spatial_extent, 0), collapse = "_")
 }
 
 layers <- rast(paste0("data/spatial_drivers/combined/layers_",
