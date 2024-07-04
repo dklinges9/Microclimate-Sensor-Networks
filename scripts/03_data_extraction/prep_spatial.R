@@ -5,7 +5,7 @@
 
 
 ## .... Load dependencies ---------
-pkgs <- c("crayon", "readr", "raster", "terra", "landscapemetrics")
+pkgs <- c("crayon", "readr", "magrittr", "raster", "terra", "landscapemetrics", "geodata")
 
 for (i in seq_along(pkgs)) {
   suppressPackageStartupMessages(
@@ -40,7 +40,6 @@ if (continue) {
   
   cat("Prepping spatial data...\n")
   
-  
   ## Workspace prep -----------
   
   ## .... Temporary extent with buffer ---------
@@ -58,12 +57,12 @@ if (continue) {
                                                spatial_extent[3] - 10000,
                                                spatial_extent[4] + 10000) )
     crs(spatial_extent_buffer) <- projection
-    spatial_extent_buffer <- terra::project(spatial_extent_buffer, "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+    spatial_extent_buffer <- terra::project(spatial_extent_buffer, "EPSG:4326")
   }
   
   ## .... Import data layers ------------
   
-  ## Topography 
+  ## ......Topography -----------
   if ("elevation" %in% chosen_layers) {
     elevation <- terra::rast(paste0("data/spatial_drivers/topography/derivative/dem_", 
                                     round(chosen_rez, 4), 
@@ -82,12 +81,81 @@ if (continue) {
                                  "_", filepattern, ".tif"))
   }
   
+  ## ......Landcover ------------
   if ("landcover" %in% chosen_layers) {
     ## ESA CCI Land cover
     landcover_global <- terra::rast("data/spatial_drivers/landcover/original/esa_cci/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif")
     landcover_link <- read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv", show_col_types = FALSE)
   }
   
+  ## ......Macroclimate ---------------
+  if ("macroclimate" %in% chosen_layers) {
+    # Because WorldClim is made available in WGS84, need to use 
+    # spatial_extent_buffer (which is in WGS84) for extracting
+
+    # Download = F entails that the function first searches the specified `path`
+    # to see if tile already downloaded
+    macroclimate <- geodata::worldclim_tile(
+      var = 'bio', lon = ext(spatial_extent_buffer)[1], 
+      lat = ext(spatial_extent_buffer)[3], download = F, 
+      path = "data/spatial_drivers/macroclimate/worldclim/")[[1]] %>% 
+      terra::resample(spatial_extent_buffer)
+    
+    # Download global bioclimatic data from worldclim
+    # Because WorldClim tiles are in 30-degree tiles, a spatial extent may fall
+    # across multiple scenes. Max of 4 scenes. Pull out each corner of spatial_extent
+    # and attempt to download each scene (if scene already downloaded, it will
+    # just load a previously downloaded scene)
+    macroclimate <- geodata::worldclim_tile(
+      var = 'bio', lon = ext(spatial_extent_buffer)[2], 
+      lat = ext(spatial_extent_buffer)[3], download = F, 
+      path = "data/spatial_drivers/macroclimate/worldclim/")[[1]] %>% 
+      terra::resample(spatial_extent_buffer) %>% 
+      terra::merge(macroclimate)
+       
+    macroclimate <- geodata::worldclim_tile(
+      var = 'bio', lon = ext(spatial_extent_buffer)[1], 
+      lat = ext(spatial_extent_buffer)[4], download = F, 
+      path = "data/spatial_drivers/macroclimate/worldclim/")[[1]] %>% 
+      terra::resample(spatial_extent_buffer) %>% 
+      terra::merge(macroclimate)
+
+    macroclimate <- geodata::worldclim_tile(
+      var = 'bio', lon = ext(spatial_extent_buffer)[2], 
+      lat = ext(spatial_extent_buffer)[4], download = F, 
+      path = "data/spatial_drivers/macroclimate/worldclim/")[[1]] %>% 
+      terra::resample(spatial_extent_buffer) %>% 
+      terra::merge(macroclimate)
+  }
+  
+  ## ......Soil Temp ---------------
+  if ("soiltemp" %in% chosen_layers) {
+    # Only download if does not already exist
+    if (!file.exists("data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif")) {
+      cat(red("Global soil temperature maps must be downloaded from Zenodo in order to include. Continue? (Y/N): "))
+      ans1 <- readline(" ")
+      
+      if (!tolower(ans1) %in% c("n", "no", "y", "yes")) {
+        stop("Inappropriate input. Must be one of: yes, YES, Y, y, no, NO, N, n.\n")
+      }
+      
+      if (tolower(ans1) %in% c("n", "no")) {
+        cat("NOT downloading global BIO1 soil temperature, and so removing soiltemp from `chosen_layers`\n")
+        chosen_layers <- chosen_layers[chosen_layers != "soiltemp"]
+      }
+      if (tolower(ans1) %in% c("y", "yes")) {
+        cat("Downloading global BIO1 soil temperature.... \n")
+        zen4R::download_zenodo(doi = "10.5281/zenodo.7134169", 
+                               path = "data/spatial_drivers/microclimate/soil_bio/", 
+                               files = "SBIO1_0_5cm_Annual_Mean_Temperature.tif",
+                               timeout = 1000)
+        soiltemp <- rast("data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif")
+      }
+    } else {
+      soiltemp <- rast("data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif")
+    }
+  }
+
   ## ....Import custom layers ------------
   
   if (any(complete.cases(custom_layers_test))) {
@@ -110,19 +178,39 @@ if (continue) {
   ## .... Land cover ------------
   
   if ("landcover" %in% chosen_layers) {
-    if (projection_units == "dd") {
-      landcover <- terra::crop(landcover_global, spatial_extent_buffer)
-      landcover <- terra::project(landcover, projection, method = "near")
-      
-    } else {
-      landcover <- terra::crop(landcover_global, spatial_extent_buffer)
-      landcover <- terra::project(landcover, projection, method = "near")
-    }
+    landcover <- terra::crop(landcover_global, spatial_extent_buffer)
+    landcover <- terra::project(landcover, projection, method = "near")
     
     # Save landcover file. But first, check if already exists and ask user if they
     # want to overwrite
     save_raster(landcover, 
                 "data/spatial_drivers/landcover/deriative/landcover_", 
+                filepattern)
+  }
+  
+  ## .... Macroclimate ------------
+  
+  if ("macroclimate" %in% chosen_layers) {
+    macroclimate <- terra::crop(macroclimate, spatial_extent_buffer)
+    macroclimate <- terra::project(macroclimate, projection, method = "bilinear")
+    
+    # Save landcover file. But first, check if already exists and ask user if they
+    # want to overwrite
+    save_raster(macroclimate, 
+                "data/spatial_drivers/macroclimate/deriative/macroclimate_", 
+                filepattern)
+  }
+  
+  ## .... Soil Temp ------------
+  
+  if ("soiltemp" %in% chosen_layers) {
+    soiltemp <- terra::crop(soiltemp, spatial_extent_buffer)
+    soiltemp <- terra::project(soiltemp, projection, method = "bilinear")
+    
+    # Save landcover file. But first, check if already exists and ask user if they
+    # want to overwrite
+    save_raster(soiltemp, 
+                "data/spatial_drivers/soiltemp/deriative/soiltemp_", 
                 filepattern)
   }
   

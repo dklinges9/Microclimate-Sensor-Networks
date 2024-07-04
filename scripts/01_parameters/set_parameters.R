@@ -13,7 +13,7 @@ cat("Setting parameters...\n")
 
 # What is the name of the landscape? This will be appended to names of output files
 # If left NA will names files according to the chosen spatial extent
-landscape_name <- "flanders"
+landscape_name <- "Flanders"
 
 # Your budget for sensors. This will be used to constrain the amount of 
 # environmental space that you can sample, and inform the power analysis
@@ -93,8 +93,11 @@ max_distance <- 10000
 ## Environmental layers ---------
 # What environmental layers do you wish to use to inform the sampling algorithm?
 # chosen_layers must be a string of the names of a subset (or all) of the following:
-# elevation, slope, aspect, landcover
-chosen_layers <- c("elevation", "slope", "aspect", "landcover")
+# elevation, slope, aspect, landcover, macroclimate, soiltemp
+chosen_layers <- c("elevation", "slope", "aspect", "landcover", 
+                   "macroclimate", "soiltemp")
+# NOTE: elevation, macroclimate, and soiltemp are all highly correlated. We 
+# recommend choosing just one of these layers depending on your needs
 
 # Are there other spatial layers of your choice that you wish to be included
 # to inform the site selection algorithm? Provide the filepaths of these layers
