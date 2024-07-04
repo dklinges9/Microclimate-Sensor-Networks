@@ -22,6 +22,14 @@ if (projection_units == "dd") {
   if (abs(spatial_extent[3] - spatial_extent[4]) > 10) {
     stop("Your projection unit is in decimal degrees, but the latitudes of your chosen extent are greater than 10 units apart. Perhaps extent was provided in meters? Please provide in decimal degrees (set_parameters.R; L36).\n")  } 
 
+  ## Confirm spatial extent is on land
+  landmask <- rast("data/base_layers/landmask.nc4")
+  landmask <- terra::project(landmask, projection, method = "near")
+  landcrop <- terra::crop(landmask, spatial_extent)
+  if (all(terra::values(landcrop) < 1)) {
+    stop("Your chosen spatial extent appears to include no land, only open water?\n")
+  }
+  
   ## Resolution
   if (chosen_rez > 1) {
     stop("If projection units are dd then chosen resolution must be as well (set_parameters.R; L52).\n")

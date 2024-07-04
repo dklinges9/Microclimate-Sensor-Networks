@@ -63,7 +63,7 @@ extent_shp <- NA
 # "+proj=longlat +datum=WGS84" 
 # Note that projections with units in meters will entail MUCH faster access
 # of a Digital Elevation Model (DEM) in get_dem.R
-projection <-  "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs" 
+projection <- "epsg:31370"
 
 # What are the units of your projection? Must be either decimal degrees (dd) 
 # or meters (m)
