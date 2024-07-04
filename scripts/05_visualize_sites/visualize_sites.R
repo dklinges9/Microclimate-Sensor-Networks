@@ -47,8 +47,11 @@ landcover_colors <- layers_df_tall %>%
   distinct(landcover_class, hex_color) %>% 
   dplyr::pull(hex_color)
 
-letters <- c("A", "C", "E", "F", "B", "D", "B", "H")
+letters <- c("A", "C", "E", "F", "B", "D", "G", "H")
 viridis_pals <- letters[1:length(chosen_layers[!chosen_layers %in% "landcover"])]
+
+# Because chosen_layers might be longer than number of letters, just repeat letters
+viridis_pals[is.na(viridis_pals)] <- letters[1:length(viridis_pals[is.na(viridis_pals)])]
 
 ## Visualizations -------------
 
