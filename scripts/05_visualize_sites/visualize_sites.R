@@ -3,9 +3,15 @@ cat("\n\nPrepping data for visualization....\n")
 
 ## Workspace prep --------------
 
-library(ggplot2)
-library(RColorBrewer)
-library(viridis)
+## .... Load dependencies ---------
+pkgs <- c("viridis", "tidyr", "readr", "RColorBrewer", "ggplot2", "terra")
+
+for (i in seq_along(pkgs)) {
+  suppressPackageStartupMessages(
+    suppressWarnings(library(pkgs[i], character.only = TRUE))
+  )
+  if (i == length(pkgs)) { rm(pkgs, i) }
+}
 
 # Specify string for naming output files
 if (complete.cases(landscape_name)) {
