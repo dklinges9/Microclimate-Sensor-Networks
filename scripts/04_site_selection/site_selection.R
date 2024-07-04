@@ -75,6 +75,10 @@ if ("landcover" %in% chosen_layers) {
     cat("Removing spatial coordinates classified as water from selection process....\n")
     terrain_df <- layers_df %>% 
       dplyr::filter(!grepl("water", landcover_class))
+    
+    if (nrow(terrain_df) < 1) {
+      stop("Removing spatial coordinates classified as water removed all locations. Check to confirm that there is dry land in your scene?\n")
+    }
   } else {
     terrain_df <- layers_df
   }
