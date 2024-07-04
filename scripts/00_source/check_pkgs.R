@@ -1,4 +1,3 @@
-## Stijn Van de Vondel
 ## This script checks whether all required packages have been installed
 
 cat("Checking installed packages\n")
@@ -62,7 +61,8 @@ if (length(new_pkgs) == 0) {
   
   cat("We recommend restarting your R session (Session > Restart R).\n")
   
-  rm(list = c("ans1", "ans2"))
+  # Attempt to remove both objects, suppress warnings
+  suppressWarnings(rm(list = c("ans1", "ans2")))
 }
 
 # clean environment  

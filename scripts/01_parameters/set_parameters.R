@@ -3,7 +3,7 @@
 
 ## Load libraries ---------------
 
-library(tidyverse)
+# library(tidyverse)
 
 cat("Setting parameters...\n")
 
@@ -17,7 +17,7 @@ landscape_name <- "flanders"
 
 # Your budget for sensors. This will be used to constrain the amount of 
 # environmental space that you can sample, and inform the power analysis
-budget <- 15000
+budget <- "15000"
 cost_per_sensor <- 100
 
 # How many sensor sites do you want?
@@ -35,7 +35,22 @@ n_sites <- 150
 # We suggest specifying an extent that is slightly larger than actual target extent,
 # to account for lost edges when reprojecting and when calculating topographical
 # variables 
-spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482) # Flanders! plus wiggle room
+# spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482) # Flanders! plus wiggle room
+
+# define region of interest to be supplied to OSM
+# region_chr <- "UK"
+# spatial_extent_sf <- sf::st_transform(spatial_extent_sf, crs = "epsg:27700")
+# spatial_extent_sf <- osmdata::getbb(region_chr, format_out = "sf_polygon")[[2]]
+
+region_chr <- "Flanders"
+spatial_extent_sf <- osmdata::getbb(region_chr, format_out = "sf_polygon")[[2]]
+spatial_extent_sf <- sf::st_transform(spatial_extent_sf, crs = "epsg:31370")
+
+# region_chr <- "Luxembourg"
+# spatial_extent_sf <- osmdata::getbb(region_chr, format_out = "sf_polygon")
+# spatial_extent_sf <- sf::st_transform(spatial_extent_sf, crs = "epsg:2169")
+
+spatial_extent <- sf::st_bbox(spatial_extent_sf)[c(1, 3, 2, 4)]; rm(spatial_extent_sf)
 
 # Alternatively a path to a raster file or shapefile can be provided
 # (I HAVEN'T YET MADE THESE OPTIONS FUNCTIONAL)
@@ -90,7 +105,7 @@ chosen_layers <- c("elevation", "slope", "aspect", "landcover")
 # Must have an extent that is equal to or larger than the `spatial_extent` above
 # Must have numeric values
 # Can be any resolution (but will be resampled to resolution of DEM, either 
-# via billinear interpolation for continuous rasters or nearest neighor for
+# via billinear interpolation for continuous rasters or nearest neighbor for
 # categorical rasters)
 custom_layers <- NA
 # What are the desired names for each layer's variable?
