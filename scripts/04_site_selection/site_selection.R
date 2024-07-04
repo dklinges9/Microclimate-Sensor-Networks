@@ -7,7 +7,7 @@ cat("\n\nPrepping data for site selection....\n")
 
 
 ## .... Load dependencies ---------
-pkgs <- c("crayon", "dplyr", "readr", "sf", "terra", "factoextra", "FactoMineR")
+pkgs <- c("crayon", "dplyr", "tibble", "readr", "sf", "terra", "factoextra", "FactoMineR")
 
 for (i in seq_along(pkgs)) {
   suppressPackageStartupMessages(
@@ -93,6 +93,7 @@ if ("landcover" %in% chosen_layers) {
 # optional step determined by user inputs
 
 if (favor_outliers) {
+  cat("Favoring outlier values as requested....\n")
   # Applies to all spatial drivers except landcover
   terrain_df <- terrain_df %>% 
     mutate_at(vars(all_of(chosen_layers[!chosen_layers == "landcover"])), ~sqrt(. + 0.0001))
@@ -121,7 +122,7 @@ check_min_dist <- function(selected_sites, min_distance, attempts = 10, recur = 
   # If looped entirely through and did not find another point closer 
   # than min_distance and did not find a good coordinate...
   if (nrow(bad_coord) > 0) {
-    cat("Found", nrow(bad_coord), "sites that were too close to another site, and so finding new site(s)...\n")
+    cat("Found", nrow(bad_coord), "site(s) that were too close to another site, and so searching for new site(s)...\n")
     
     # Pull out the bad coords from selected_sites
     new_selected_sites <- selected_sites %>% 
@@ -210,7 +211,7 @@ check_max_dist <- function(selected_sites, max_distance, attempts = 10, recur = 
   # If looped entirely through and did not find another point closer 
   # than max_distance and did not find a good coordinate...
   if (nrow(bad_coord) > 0) {
-    cat("Found", nrow(bad_coord), "points that were too far away from all other points, and so finding new one...\n")
+    cat("Found", nrow(bad_coord), "site(s) that were too far away from all other sites, and so searching for new site(s)...\n")
     
     # Pull out the bad coords from selected_sites
     new_selected_sites <- selected_sites %>% 
@@ -301,6 +302,8 @@ if(any(!is.na(required_sites))) {
 ## Ordination algorithm ----------
 # random selection in each bin is used; use set.seed to have the same selection in each run
 set.seed(seed = 1)
+
+cat("Conducting ordination algorithm....\n")
 
 if (program_rerun) {
   cat("Re-running program, and therefore using ordination values from last run...\n")
@@ -429,7 +432,6 @@ if (!program_rerun) {
 }
 
 ## ....If previous sites, remove these from ordination space --------
-
 
 # This will ensure that new sites chosen will be complementary to the the sites
 # already present in selected_sites
