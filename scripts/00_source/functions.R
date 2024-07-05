@@ -23,7 +23,7 @@ save_raster <- function(rst, filepath, filepattern) {
     }
   } else {
     if (!file.exists(dirname(filepath))) {
-      cat(red("Directory `", filepath, "` does not yet exist\n Create directory? (Y/N)\n"))
+      cat(red("Directory `", filepath, "` does not yet exist.\n Create directory? (Y/N)\n"))
       ans2 <- readline(" ")
 
       if (tolower(ans2) %in% c("y", "yes")) {
