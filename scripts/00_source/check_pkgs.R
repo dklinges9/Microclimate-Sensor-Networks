@@ -17,7 +17,7 @@ if (length(new_pkgs) == 0) {
     # prompt user to confirm whether or not to install required packages
   if (length(new_pkgs)) {
     
-    cat(red("Following packages have not yet been installed:\n"))
+    cat("Following packages have not yet been installed:\n")
     cat(paste0(new_pkgs, "\n"))
     cat(red("Would you like to install these packages and their dependencies? (Y/N): "))
     ans1 <- readline(" ")
