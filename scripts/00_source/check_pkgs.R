@@ -65,7 +65,7 @@ if (length(new_pkgs) == 0) {
   # Garbage collect
   invisible(gc())
   
-  cat("\033[0;31mWe recommend restarting your R session (For RStudio users: Session > Restart R or CTRL+SHIFT+F10).\033[0m\n")
+  cat(crayon::red("We recommend restarting your R session (For RStudio users: Session > Restart R or CTRL+SHIFT+F10).\n"))
   
   # Attempt to remove both objects, suppress warnings
   suppressWarnings(rm(list = c("ans1", "ans2", "pkgs", "new_pkgs")))
