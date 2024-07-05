@@ -17,16 +17,15 @@ if (length(new_pkgs) == 0) {
     # prompt user to confirm whether or not to install required packages
   if (length(new_pkgs)) {
     
-    cat(paste0("\033[0;31mFollowing packages have not yet been installed:\033[0m","\n")) # 41 = white text, red bg, 31 = red text
+    cat("\033[0;31mFollowing packages have not yet been installed:\033[0m\n") # 41 = white text, red bg, 31 = red text
     cat(paste0(new_pkgs, "\n"))
-    cat(paste0("\033[0;31mWould you like to install these packages and their dependencies? (Y/N): \033[0m","\n")) # 41 = white text, red bg, 31 = red text
-    # cat("Would you like to install these packages and their dependencies? (Y/N): ")
+    cat("\033[0;31mWould you like to install these packages and their dependencies? (Y/N): \033[0m\n")
     ans1 <- readline(" ")
 
     # for microclim a, installation via github (requires devtools, Rtools, and rnoaa dependency)
-    if (c("microclima", "zen4R") %in% new_pkgs) {
+    if (sum(c("microclima", "zen4R") %in% new_pkgs)>0) {
       if (!"devtools" %in% installed.packages()[,"Package"]) {
-        ans2 <- readline("Package `devtools` is required to install packages from GitHub Install devtools? (Y/N): ")
+        ans2 <- readline("Package `devtools` is required to install packages from GitHub.\nInstall devtools? (Y/N): ")
         
         if (!tolower(ans2) %in% c("y", "yes")) {
           warning("Packages have not been installed. Scripts are not guaranteed to run.\n")
@@ -64,13 +63,10 @@ if (length(new_pkgs) == 0) {
   } else cat("All required packages have been installed succesfully.\n")
   
   # Garbage collect
-  gc()
+  invisible(gc())
   
-  cat("We recommend restarting your R session (Session > Restart R).\n")
+  cat("We recommend restarting your R session (For RStudio users: Session > Restart R or CTRL+SHIFT+F10).\n")
   
   # Attempt to remove both objects, suppress warnings
-  suppressWarnings(rm(list = c("ans1", "ans2")))
+  suppressWarnings(rm(list = c("ans1", "ans2", "pkgs", "new_pkgs")))
 }
-
-# clean environment  
-rm(list = c("pkgs", "new_pkgs"))
