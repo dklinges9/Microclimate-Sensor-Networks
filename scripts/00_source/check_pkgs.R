@@ -5,7 +5,7 @@ cat("Checking installed packages\n")
 # list all required packages for the scripts to run
 pkgs <- c("tidyverse", "elevatr", "rnoaa", "microclima", "terra", "landscapemetrics",
           "pwr", "sf", "factoextra", "FactoMineR", "ggplot2", "RColorBrewer", "viridis", 
-          "crayon", "geodata", "zen4R")
+          "crayon", "geodata", "zen4R") # crayon required?
 
 # find the packages that have not yet been installed on the device
 new_pkgs <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
@@ -65,7 +65,7 @@ if (length(new_pkgs) == 0) {
   # Garbage collect
   invisible(gc())
   
-  cat("We recommend restarting your R session (For RStudio users: Session > Restart R or CTRL+SHIFT+F10).\n")
+  cat("\033[0;31mWe recommend restarting your R session (For RStudio users: Session > Restart R or CTRL+SHIFT+F10).\033[0m\n")
   
   # Attempt to remove both objects, suppress warnings
   suppressWarnings(rm(list = c("ans1", "ans2", "pkgs", "new_pkgs")))
