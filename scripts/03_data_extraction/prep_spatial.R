@@ -16,7 +16,7 @@ for (i in seq_along(pkgs)) {
 
 
 # Confirm script should be run
-if (program_rerun) {
+if (program_rerun) { # running the code non-sequentially (e.g. running prep_spatial.R first) will break the program
   cat(red("program_rerun set to TRUE, so you should not need to re-run prep_spatial.R. Do you wish to continue? (Y/N): "))
   ans1 <- readline(" ")
   
@@ -25,11 +25,11 @@ if (program_rerun) {
   }
   
   if (tolower(ans1) %in% c("n", "no")) {
-    cat("Skipping prep_spatial.R. \n")
+    cat(red("Skipping prep_spatial.R. \n"))
     continue <- FALSE
   }
   if (tolower(ans1) %in% c("y", "yes")) {
-    cat("Continuing program.\n")
+    cat(red("Continuing program.\n"))
     continue <- TRUE
   }
 } else {
@@ -38,7 +38,7 @@ if (program_rerun) {
 
 if (continue) {
   
-  cat("Prepping spatial data...\n")
+  cat(red("Prepping spatial data...\n"))
   
   ## Workspace prep -----------
   
@@ -134,17 +134,20 @@ if (continue) {
     if (!file.exists("data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif")) {
       cat(red("Global soil temperature maps must be downloaded from Zenodo in order to include. Continue? (Y/N): "))
       ans1 <- readline(" ")
-      
       if (!tolower(ans1) %in% c("n", "no", "y", "yes")) {
         stop("Inappropriate input. Must be one of: yes, YES, Y, y, no, NO, N, n.\n")
       }
       
       if (tolower(ans1) %in% c("n", "no")) {
-        cat("NOT downloading global BIO1 soil temperature, and so removing soiltemp from `chosen_layers`\n")
+        cat(red("NOT downloading global BIO1 soil temperature, and so removing soiltemp from `chosen_layers`\n"))
         chosen_layers <- chosen_layers[chosen_layers != "soiltemp"]
       }
       if (tolower(ans1) %in% c("y", "yes")) {
-        cat("Downloading global BIO1 soil temperature.... \n")
+        cat(red("Downloading global BIO1 soil temperature.... \n"))
+        if (!file.exists("data/spatial_drivers/microclimate/soil_bio")) {
+          cat(red("Creating folder 'data/spatial_drivers/microclimate/soil_bio'\n"))
+          dir.create("data/spatial_drivers/microclimate/soil_bio", recursive = TRUE)
+        }
         zen4R::download_zenodo(doi = "10.5281/zenodo.7134169", 
                                path = "data/spatial_drivers/microclimate/soil_bio/", 
                                files = "SBIO1_0_5cm_Annual_Mean_Temperature.tif",
@@ -161,10 +164,10 @@ if (continue) {
   if (any(complete.cases(custom_layers_test))) {
     custom_layers_r <- lapply(custom_layers_test, function(l) {
       if (file.exists(l)) {
-        cat("Reading in custom layers", l, "\n")
+        cat(red("Reading in custom layers", l, "\n"))
         return(rast(l))
       } else {
-        cat("No file found for filepath", l, "so ignoring.\n")
+        cat(red("No file found for filepath", l, "so ignoring.\n"))
         return(NA)
       }
     })
@@ -243,7 +246,7 @@ if (continue) {
   finest_rez_layer <- chosen_layers_list[which.min(unlist(layer_resolutions))][[1]]
   
   # Resample all layers
-  cat("Standardizing spatial information across chosen layers...\n")
+  cat(red("Standardizing spatial information across chosen layers...\n"))
   chosen_layers_list <- lapply(chosen_layers_list, function(x) {
     # Resample all layers to the layer with the finest resolution. But, use 
     # method = "near" so we aren't interpolating categorical data or making 
