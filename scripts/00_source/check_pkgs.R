@@ -19,7 +19,7 @@ if (length(new_pkgs) == 0) {
     
     cat("Following packages have not yet been installed:\n")
     cat(paste0(new_pkgs, "\n"))
-    cat(red("Would you like to install these packages and their dependencies? (Y/N): "))
+    cat("Would you like to install these packages and their dependencies? (Y/N): ")
     ans1 <- readline(" ")
 
     # for microclim a, installation via github (requires devtools, Rtools, and rnoaa dependency)
