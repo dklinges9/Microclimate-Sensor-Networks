@@ -187,7 +187,7 @@ if (continue) {
     # Save landcover file. But first, check if already exists and ask user if they
     # want to overwrite
     save_raster(landcover, 
-                "data/spatial_drivers/landcover/deriative/landcover_", 
+                "data/spatial_drivers/landcover/derivative/landcover_", 
                 filepattern)
   }
   
@@ -200,7 +200,7 @@ if (continue) {
     # Save landcover file. But first, check if already exists and ask user if they
     # want to overwrite
     save_raster(macroclimate, 
-                "data/spatial_drivers/macroclimate/deriative/macroclimate_", 
+                "data/spatial_drivers/macroclimate/derivative/macroclimate_", 
                 filepattern)
   }
   
@@ -213,7 +213,7 @@ if (continue) {
     # Save landcover file. But first, check if already exists and ask user if they
     # want to overwrite
     save_raster(soiltemp, 
-                "data/spatial_drivers/soiltemp/deriative/soiltemp_", 
+                "data/spatial_drivers/soiltemp/derivative/soiltemp_", 
                 filepattern)
   }
   
