@@ -17,9 +17,10 @@ if (length(new_pkgs) == 0) {
     # prompt user to confirm whether or not to install required packages
   if (length(new_pkgs)) {
     
-    cat("Following packages have not yet been installed:\n")
+    cat(paste0("\033[0;31mFollowing packages have not yet been installed:\033[0m","\n")) # 41 = white text, red bg, 31 = red text
     cat(paste0(new_pkgs, "\n"))
-    cat("Would you like to install these packages and their dependencies? (Y/N): ")
+    cat(paste0("\033[0;31mWould you like to install these packages and their dependencies? (Y/N): \033[0m","\n")) # 41 = white text, red bg, 31 = red text
+    # cat("Would you like to install these packages and their dependencies? (Y/N): ")
     ans1 <- readline(" ")
 
     # for microclim a, installation via github (requires devtools, Rtools, and rnoaa dependency)
