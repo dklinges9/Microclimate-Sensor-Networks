@@ -53,8 +53,8 @@ layers_df <- layers_df %>%
 ## Recode landcover as factor -----------
 if ("landcover" %in% chosen_layers) {
   
-    landcover_link <- suppressMessages(read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv"))
-
+  landcover_link <- suppressMessages(read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv"))
+  
   layers_df <- layers_df %>% 
     dplyr::rename(ungrouped_number = landcover) %>% 
     left_join(landcover_link %>% 
@@ -81,7 +81,7 @@ if ("landcover" %in% chosen_layers) {
 } else {
   terrain_df <- layers_df
 }
-  
+
 ## square root correction of data that would heavily favour outliers (e.g. in mountains) ------------
 # optional step determined by user inputs
 
@@ -237,7 +237,7 @@ check_max_dist <- function(selected_sites, max_distance, attempts = 10, recur = 
         iter <- new_selected_sites[i,] %>% 
           dplyr::select(-rowname)
       }
-
+      
       if (i == 1) {
         out <- iter
       } else {
@@ -458,9 +458,9 @@ if(any(!is.na(selected_sites))) {
 
 # Count the number of unique bins
 n_bins <- nrow(terrain_toSample_df %>% 
-  group_by(dim1_bin, dim2_bin, dim3_bin) %>% 
-  count() %>% 
-  ungroup())
+                 group_by(dim1_bin, dim2_bin, dim3_bin) %>% 
+                 count() %>% 
+                 ungroup())
 
 # Determine number of new sites to be added (if some sites already required/selected)
 if(any(!is.na(selected_sites))) {
@@ -518,12 +518,28 @@ if (nrow(close_df) > 0) {
   cat("There are", nrow(close_df), "sites that are closer to at least one other site than your specified min_distance, as there were no other sites to choose from that represented environmental space as well as these.
   
 You can investigate these sites separately in the file", paste0("data/chosen_sites/diagnostics/", filepattern, 
-                                 "_", n_sites, "_close_coords.csv"), "\n")
-
+                                                                "_", n_sites, "_close_coords.csv"), "\n")
+  
   # Find coordinates for too-near sites
   close_coords <- selected_sites %>% 
     dplyr::slice(which(colnames(close_df) %in% rownames(close_df)))
-
+  
+  if (!dir.exists("data/chosen_sites/diagnostics/")) {
+    cat(red("Directory `data/chosen_sites/diagnostics/` does not exist.\n Create directory? (Y/N)\n"))
+    ans0 <- readline(" ")
+    
+    if (!tolower(ans0) %in% c("n", "no", "y", "yes")) {
+      stop("Inappropriate input. Must be one of: yes, YES, Y, y, no, NO, N, n.\n")
+    }
+    if (tolower(ans0) %in% c("y", "yes")) {
+      cat(red("Creating directory: `data/chosen_sites/diagnostics/`"))
+      dir.create("data/chosen_sites/diagnostics/", recursive = T)
+    } 
+    if (tolower(ans0) %in% c("n", "no")) {
+      stop("Directory was not created, program ended.")
+    }
+  }
+  
   write_csv(close_coords, paste0("data/chosen_sites/diagnostics/", filepattern, 
                                  "_", n_sites, "_close_coords.csv"))
 }
@@ -570,7 +586,7 @@ if(nrow(selected_sites) < n_sites_new){
     # Check that all sites are below maximum distance
     selected_sites <- check_max_dist(selected_sites, max_distance, attempts = 10, recur = 0)
     # Check that all sites are above minimum distance
-
+    
   }
   if (tolower(ans1) %in% c("n", "no")) {
     cat("Not choosing any more sites, providing", nrow(selected_sites), "sites.\n")
@@ -596,16 +612,16 @@ selected_sites <- selected_sites %>%
       dplyr::select(-x, -y), by = join_by(rowname)
   ) %>% 
   dplyr::select(-rowname)
-  
+
 # If landcover included, join back landcover class names
-  if ("landcover" %in% chosen_layers) {
-    selected_sites <- selected_sites %>% 
-      dplyr::rename(ungrouped_number = landcover) %>% 
-      left_join(landcover_link %>% 
-                  dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>% 
-                  dplyr::select(landcover, landcover_class, ungrouped_number), by = join_by(ungrouped_number)) %>%
-      dplyr::select(-ungrouped_number)
-  }
+if ("landcover" %in% chosen_layers) {
+  selected_sites <- selected_sites %>% 
+    dplyr::rename(ungrouped_number = landcover) %>% 
+    left_join(landcover_link %>% 
+                dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>% 
+                dplyr::select(landcover, landcover_class, ungrouped_number), by = join_by(ungrouped_number)) %>%
+    dplyr::select(-ungrouped_number)
+}
 
 ## Reorder columns
 selected_sites <- selected_sites %>% 
@@ -613,6 +629,8 @@ selected_sites <- selected_sites %>%
 
 ## Write out CSV of selected sites -----------
 
+# Check if CSV for selected sites already exists, if so confirm with user 
+# before overwriting
 if (file.exists(paste0("data/chosen_sites/selected_sites_",
                        filepattern, "_", n_sites, ".csv"))) {
   cat(red("File ", 
@@ -621,20 +639,12 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
           " already exists. Overwrite? (Y/N): "))
   ans1 <- readline(" ")
   
+  if (!tolower(ans1) %in% c("n", "no", "y", "yes")) {
+    stop("Inappropriate input. Must be one of: yes, YES, Y, y, no, NO, N, n.\n")
+  }
+  
   if (tolower(ans1) %in% c("y", "yes")) {
     
-    if (!file.exists(dirname("data/landscape_data/"))) {
-      cat(red("Directory `data/landscape_data` does not exist.\n Create directory? (Y/N)\n"))
-      ans2 <- readline(" ")
-      
-      if (tolower(ans2) %in% c("y", "yes")) {
-        cat(red("Creating directory: `data/landscape_data`"))
-        dir.create("data/landscape_data")
-      } else {
-        stop("Directory was not created, program ended.")
-      }
-    }
-
     write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", filepattern,
                                  "_", n_sites, ".csv"))
     write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_",
@@ -645,9 +655,27 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
     cat("File not overwritten, but selected sites still available in object `selected_sites`.\n")
   }
 } else {
+  # Check if directories need to be created
+  if (!dir.exists("data/landscape_data/")) {
+    cat(red("Directory `data/landscape_data` does not exist.\n Create directory? (Y/N)\n"))
+    ans2 <- readline(" ")
+    
+    if (!tolower(ans2) %in% c("n", "no", "y", "yes")) {
+      stop("Inappropriate input. Must be one of: yes, YES, Y, y, no, NO, N, n.\n")
+    }
+    if (tolower(ans2) %in% c("y", "yes")) {
+      cat(red("Creating directory: `data/landscape_data`"))
+      dir.create("data/landscape_data", recursive = T)
+    } 
+    if (tolower(ans2) %in% c("n", "no")) {
+      stop("Directory was not created, program ended.")
+    }
+  }
+  
+  # Now write out files
   write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", 
                                filepattern, "_", n_sites, ".csv"))
   write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_",
-                              filepattern, "_", n_sites, ".csv"))
+                                   filepattern, "_", n_sites, ".csv"))
 }
 
