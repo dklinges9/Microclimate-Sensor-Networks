@@ -10,7 +10,7 @@
 ## require user input in the console
 source("scripts/00_source/check_pkgs.R")
 source("scripts/00_source/functions.R")
-source("scripts/01_parameters/set_parameters.R")
+source("scripts/set_parameters.R")
 source("scripts/01_parameters/check_parameters.R")
 source("scripts/02_power_analysis/power_analysis.R")
 source("scripts/03_data_extraction/get_dem.R")
@@ -21,7 +21,7 @@ source("scripts/05_visualize_sites/visualize_sites.R")
 ## If re-running the program iteratively after having already chosen sites
 ## via this program, then only run these lines of code
 source("scripts/00_source/functions.R")
-source("scripts/01_parameters/set_parameters.R")
+source("scripts/set_parameters.R")
 source("scripts/01_parameters/check_parameters.R")
 source("scripts/04_site_selection/site_selection.R")
 source("scripts/05_visualize_sites/visualize_sites.R")
