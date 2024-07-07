@@ -5,6 +5,10 @@ data/spatial_drivers/macroclimate/**/*.nc
 
 # Derivative spatial layers for landscapes
 data/spatial_drivers/**/**/*.tif
+data/spatial_drivers/macroclimate/worldclim/*
+
+# Derivative landscape bins
+data/landscape_data/*
 
 # Test and example files
 data/chosen_sites/old_examples/*
@@ -12,6 +16,7 @@ figures/point_selection/paper_examples/*
 figures/point_selection/smokies_nodist*
 figures/point_selection/smokes_dist/*
 figures/paper_figures/*
+data/paper_data/*
 
 # History files
 .Rhistory
