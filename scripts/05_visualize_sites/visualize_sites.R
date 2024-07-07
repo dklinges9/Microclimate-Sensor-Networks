@@ -58,9 +58,9 @@ viridis_pals[is.na(viridis_pals)] <- letters[1:length(viridis_pals[is.na(viridis
 ## ....Spatial Maps -------------
 count <- 0
 maps <- lapply(chosen_layers, function(foo) {
-   if (foo != "landcover") {
-     count <<- count + 1
-   }
+  if (foo != "landcover") {
+    count <<- count + 1
+  }
   df <- layers_df_tall %>% 
     dplyr::filter(chsen_layers == foo)
   
@@ -104,9 +104,9 @@ maps <- lapply(chosen_layers, function(foo) {
 multi_factor <- dim(layers)[1] * dim(layers)[2] / n_sites * .75
 
 selected_sites_multi <- do.call("rbind", replicate(multi_factor, 
-                                              selected_sites %>% 
-                                                mutate(landcover = as.double(landcover)),
-                                              simplify = FALSE))
+                                                   selected_sites %>% 
+                                                     mutate(landcover = as.double(landcover)),
+                                                   simplify = FALSE))
 
 selected_sites_multi_tall <- selected_sites_multi %>% 
   dplyr::select(all_of(chosen_layers)) %>% 
@@ -140,7 +140,7 @@ if ("landcover" %in% chosen_layers2) {
 }
 
 for (x_layer in chosen_layers2) {
-
+  
   y_layers <- chosen_layers2[!chosen_layers2 == x_layer]
   
   for (y_layer in y_layers) {
