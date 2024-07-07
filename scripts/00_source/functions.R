@@ -22,13 +22,13 @@ save_raster <- function(rst, filepath, filepattern) {
       cat("File not overwritten, continuing program.\n")
     }
   } else {
-    if (!dir.exists(filepath)) {
-      cat(red("Directory `", filepath, "` does not yet exist.\n Create directory? (Y/N)\n"))
+    if (!file.exists(dirname(filepath))) {
+      cat(red("Directory `", dirname(filepath), "` does not yet exist.\n Create directory? (Y/N)\n"))
       ans2 <- readline(" ")
 
       if (tolower(ans2) %in% c("y", "yes")) {
         dir.create(dirname(filepath), recursive = TRUE)
-        cat(red("Creating directory: ", filepath))
+        cat(red("Creating directory: ", dirname(filepath)), "\n")
       } else if (tolower(ans2) %in% c("n", "no")) {
         stop("Directory was not created, program ended.")
       }
