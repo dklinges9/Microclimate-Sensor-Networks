@@ -5,12 +5,10 @@
 
 cat("Setting parameters...\n")
 
-## These are parameters relevant to running a power analysis to determine statistical power
-
 ## Project parameters -----------
 
 # What is the name of the landscape? This will be appended to names of output files
-# If left NA will names files according to the chosen spatial extent
+# If left NA will name files according to the chosen spatial extent
 landscape_name <- "south_sumatra"
 
 # Your budget for sensors. This will be used to constrain the amount of 
@@ -152,7 +150,7 @@ r2 <- 0.15
 
 # If you are running the program again to update locations based upon a prior
 # program run, then this data.frame must also include the following columns (in other
-# words, must be at subset of the `"data/chosen_sites/selected_sites_*.csv` 
+# words, must be all of, or at subset of, the `"data/chosen_sites/selected_sites_*.csv` 
 # generated from the prior program run):
 # dim1_bin -- Dim. 1 bin that the coordinate falls into, as created on last program run
 # dim2_bin -- Dim. 2 bin that the coordinate falls into, as created on last program run
