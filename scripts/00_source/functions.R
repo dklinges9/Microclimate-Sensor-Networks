@@ -22,7 +22,7 @@ save_raster <- function(rst, filepath, filepattern) {
       cat("File not overwritten, continuing program.\n")
     }
   } else {
-    if (!file.exists(dirname(filepath))) {
+    if (!dir.exists(filepath)) {
       cat(red("Directory `", filepath, "` does not yet exist.\n Create directory? (Y/N)\n"))
       ans2 <- readline(" ")
 
