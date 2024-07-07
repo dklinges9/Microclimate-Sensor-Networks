@@ -3,8 +3,6 @@
 
 ## Load libraries ---------------
 
-# library(tidyverse)
-
 cat("Setting parameters...\n")
 
 ## These are parameters relevant to running a power analysis to determine statistical power
@@ -13,11 +11,11 @@ cat("Setting parameters...\n")
 
 # What is the name of the landscape? This will be appended to names of output files
 # If left NA will names files according to the chosen spatial extent
-landscape_name <- "Flanders"
+landscape_name <- "south_sumatra"
 
 # Your budget for sensors. This will be used to constrain the amount of 
 # environmental space that you can sample, and inform the power analysis
-budget <- "15000"
+budget <- 15000
 cost_per_sensor <- 100
 
 # How many sensor sites do you want?
@@ -27,35 +25,26 @@ cost_per_sensor <- 100
 # power analysis and chosen budget
 # Also note that depending on your study design, you may want to place multiple
 # sensors at a given spatial point (e.g. at different heights/depths).
-n_sites <- 150
+n_sites <- 100
 
 ## Spatial parameters ------------
 
-# What is the spatial extent of your target region?
+# What is the spatial extent of your target region? Provide this as a vector of
+# 4 numbers corresponding to the bounding box of the spatial extent
 # We suggest specifying an extent that is slightly larger than actual target extent,
 # to account for lost edges when reprojecting and when calculating topographical
 # variables 
-# spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482) # Flanders! plus wiggle room
+# Examples:
+# spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482) 
+# spatial_extent <- c(9686288.36062736, 9793781.96903831, -370468.177723256, -320855.743072046)
+# spatial_extent <- c(102.583, 103.728, -3.44038, -3)
 
-# define region of interest to be supplied to OSM
-# region_chr <- "UK"
-# spatial_extent_sf <- sf::st_transform(spatial_extent_sf, crs = "epsg:27700")
-# spatial_extent_sf <- osmdata::getbb(region_chr, format_out = "sf_polygon")[[2]]
-
-region_chr <- "Flanders"
-spatial_extent_sf <- osmdata::getbb(region_chr, format_out = "sf_polygon")[[2]]
-spatial_extent_sf <- sf::st_transform(spatial_extent_sf, crs = "epsg:31370")
-
-# region_chr <- "Luxembourg"
-# spatial_extent_sf <- osmdata::getbb(region_chr, format_out = "sf_polygon")
-# spatial_extent_sf <- sf::st_transform(spatial_extent_sf, crs = "epsg:2169")
-
-spatial_extent <- sf::st_bbox(spatial_extent_sf)[c(1, 3, 2, 4)]; rm(spatial_extent_sf)
+spatial_extent <- c(9686288, 9730000, -370468, -348855)
 
 # Alternatively a path to a raster file or shapefile can be provided
 # (I HAVEN'T YET MADE THESE OPTIONS FUNCTIONAL)
-extent_rast <- NA
-extent_shp <- NA
+# extent_rast <- NA
+# extent_shp <- NA
 
 # Provide the projection of the specified spatial_extent
 # Some example projections:
@@ -63,7 +52,7 @@ extent_shp <- NA
 # "+proj=longlat +datum=WGS84" 
 # Note that projections with units in meters will entail MUCH faster access
 # of a Digital Elevation Model (DEM) in get_dem.R
-projection <- "epsg:31370"
+projection <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 
 # What are the units of your projection? Must be either decimal degrees (dd) 
 # or meters (m)
@@ -95,9 +84,9 @@ max_distance <- 10000
 # chosen_layers must be a string of the names of a subset (or all) of the following:
 # elevation, slope, aspect, landcover, macroclimate, soiltemp
 chosen_layers <- c("elevation", "slope", "aspect", "landcover", 
-                   "macroclimate", "soiltemp")
+                   "soiltemp")
 # NOTE: elevation, macroclimate, and soiltemp are all highly correlated. We 
-# recommend choosing just one of these layers depending on your needs
+# recommend choosing from just one of these layers depending on your needs
 
 # Are there other spatial layers of your choice that you wish to be included
 # to inform the site selection algorithm? Provide the filepaths of these layers
@@ -113,6 +102,7 @@ chosen_layers <- c("elevation", "slope", "aspect", "landcover",
 custom_layers <- NA
 # What are the desired names for each layer's variable?
 custom_layers_names <- NA
+
 # Example for Madagascar:
 # custom_layers <- c("data/spatial_drivers/vegetation/global_forest_change/original/Hansen_GFC-2020-v1.8_treecover2000_20S_040E.tif", "PATH/TO/LAYER2", "PATH/TO/LAYER3")
 # custom_layers_names <- c("treecover", "test1", "test2")
