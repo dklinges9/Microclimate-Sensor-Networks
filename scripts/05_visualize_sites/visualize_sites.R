@@ -164,3 +164,4 @@ for (x_layer in chosen_layers2) {
   chosen_layers2 <- chosen_layers2[!grepl(x_layer, chosen_layers2)]
 }
 
+cat(red("All figures have been saved to /figures/point_selection/. \n"))
