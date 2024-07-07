@@ -408,7 +408,7 @@ if (!program_rerun) {
   Steps_Dim.2<-(max(terrain_df$Dim.2)-min(terrain_df$Dim.2))/Groups
   Steps_Dim.3<-(max(terrain_df$Dim.3)-min(terrain_df$Dim.3))/Groups
   
-  cat("\n\nBEGINNING SITE SELECTION....\n\n")
+  cat(red("\n\nBEGINNING SITE SELECTION....\n\n"))
   
   # Sleep for 1.5 seconds so user can see messages
   Sys.sleep(1.5)
@@ -498,7 +498,7 @@ selected_sites <- check_max_dist(selected_sites, max_distance, attempts = 10, re
 # Check that all sites are above minimum distance
 selected_sites <- check_min_dist(selected_sites, min_distance, attempts = 10, recur = 0)
 
-cat("COMPLETED SITE SELECTION.\n")
+cat(red("COMPLETED SITE SELECTION.\n"))
 
 ## ....Checks on sites -------------
 
@@ -622,6 +622,18 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
   ans1 <- readline(" ")
   
   if (tolower(ans1) %in% c("y", "yes")) {
+    
+    if (!file.exists(dirname("data/landscape_data/"))) {
+      cat(red("Directory `data/landscape_data` does not exist.\n Create directory? (Y/N)\n"))
+      ans2 <- readline(" ")
+      
+      if (tolower(ans2) %in% c("y", "yes")) {
+        cat(red("Creating directory: `data/landscape_data`"))
+        dir.create("data/landscape_data")
+      } else {
+        stop("Directory was not created, program ended.")
+      }
+    }
 
     write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", filepattern,
                                  "_", n_sites, ".csv"))
@@ -630,7 +642,7 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
     cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", filepattern, "_", n_sites, ".csv"))
   }
   if (tolower(ans1) %in% c("n", "no")) {
-    cat("File not overwritten, but selected sites still availabile in object `selected_sites`.\n")
+    cat("File not overwritten, but selected sites still available in object `selected_sites`.\n")
   }
 } else {
   write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", 

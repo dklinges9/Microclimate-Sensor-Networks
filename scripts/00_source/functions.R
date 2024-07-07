@@ -22,6 +22,18 @@ save_raster <- function(rst, filepath, filepattern) {
       cat("File not overwritten, continuing program.\n")
     }
   } else {
+    if (!file.exists(dirname(filepath))) {
+      cat(red("Directory `", filepath, "` does not yet exist.\n Create directory? (Y/N)\n"))
+      ans2 <- readline(" ")
+
+      if (tolower(ans2) %in% c("y", "yes")) {
+        dir.create(dirname(filepath), recursive = TRUE)
+        cat(red("Creating directory: ", filepath))
+      } else if (tolower(ans2) %in% c("n", "no")) {
+        stop("Directory was not created, program ended.")
+      }
+      
+    }
     writeRaster(rst, paste0(filepath,
                                   filepattern, ".tif"))
   }
