@@ -3,14 +3,15 @@ data/spatial_drivers/landcover/original/**/*.tif
 data/spatial_drivers/vegetation/global_forest_change/original/**/*.tif
 data/spatial_drivers/macroclimate/**/*.nc
 
-# Many generated figures
-figures/point_selection/*.png
-
 # Derivative spatial layers for landscapes
 data/spatial_drivers/**/**/*.tif
 
-# Test files
+# Test and example files
 data/chosen_sites/old_examples/*
+figures/point_selection/paper_examples/*
+figures/point_selection/smokies_nodist*
+figures/point_selection/smokes_dist/*
+figures/paper_figures/*
 
 # History files
 .Rhistory
