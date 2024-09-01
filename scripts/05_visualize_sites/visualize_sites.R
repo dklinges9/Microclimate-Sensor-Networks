@@ -70,7 +70,7 @@ maps <- lapply(chosen_layers, function(foo) {
     map <- ggplot(data = df, aes(x, y)) +
       geom_point(aes(color = landcover_class)) +
       scale_color_manual(values = landcover_colors) +
-      geom_point(data = selected_sites, aes(x, y)) +
+      geom_point(data = selected_sites, aes(x, y), pch=21, fill = "white", colour = "black") +
       labs(color = "") +
       theme_void()
     
@@ -85,7 +85,7 @@ maps <- lapply(chosen_layers, function(foo) {
     map <- ggplot(data = df, aes(x, y)) +
       geom_raster(aes(fill = vals), alpha = 0.7) +
       scale_fill_viridis(option = viridis_pals[count]) +
-      geom_point(data = selected_sites, aes(x, y)) +
+      geom_point(data = selected_sites, aes(x, y), pch=21, fill = "white", colour = "black") +
       labs(color = "") +
       theme_void()
     
