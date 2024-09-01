@@ -5,7 +5,7 @@ cat("Checking installed packages\n")
 # list all required packages for the scripts to run
 pkgs <- c("tidyverse", "elevatr", "rnoaa", "microclima", "terra", "landscapemetrics",
           "pwr", "sf", "factoextra", "FactoMineR", "ggplot2", "RColorBrewer", "viridis", 
-          "crayon", "geodata", "zen4R") # crayon required?
+          "crayon", "geodata", "zen4R", "wesanderson", "gridExtra") # crayon required?
 
 # find the packages that have not yet been installed on the device
 new_pkgs <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]

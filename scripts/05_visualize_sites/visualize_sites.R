@@ -4,7 +4,7 @@ cat("\n\nPrepping data for visualization....\n")
 ## Workspace prep --------------
 
 ## .... Load dependencies ---------
-pkgs <- c("viridis", "tidyr", "readr", "RColorBrewer", "ggplot2", "terra")
+pkgs <- c("viridis", "tidyr", "readr", "RColorBrewer", "ggplot2", "terra", "gridExtra")
 
 for (i in seq_along(pkgs)) {
   suppressPackageStartupMessages(
@@ -25,6 +25,9 @@ if (complete.cases(landscape_name)) {
 layers <- rast(paste0("data/spatial_drivers/combined/layers_",
                       round(chosen_rez, 4), "_", filepattern, ".tif"))
 
+dims <- rast(paste0("data/landscape_data/dim_values_", filepattern, ".tif"))
+bin_id <- rast(paste0("data/landscape_data/bin_id_", filepattern, ".tif"))
+
 ## Data Curation for visuals ----------
 
 layers_df_tall <- layers_df %>% 
@@ -39,6 +42,12 @@ layers_df_tall <- layers_df %>%
   mutate(landcover = as.character(landcover)) %>%
   mutate(landcover = as.double(landcover)) %>%
   pivot_longer(all_of(chosen_layers), names_to = "chsen_layers", values_to = "vals")
+
+# Curate bin layers
+dims_df <- as.data.frame(dims, xy = T) %>% 
+  dplyr::rename(`Dim 1` = Dim_1, `Dim 2` = Dim_2, `Dim 3` = Dim_3)
+
+binID_df <- as.data.frame(bin_id, xy = T)
 
 ## Color palettes --------
 
@@ -57,9 +66,26 @@ viridis_pals <- letters[1:length(chosen_layers[!chosen_layers %in% "landcover"])
 # Because chosen_layers might be longer than number of letters, just repeat letters
 viridis_pals[is.na(viridis_pals)] <- letters[1:length(viridis_pals[is.na(viridis_pals)])]
 
-## Visualizations -------------
+## For bins
+bin_pal <- c(brewer.pal(8, "Set2"),
+             brewer.pal(12, "Paired"),
+             brewer.pal(8, "Dark2"))
 
+## Visualizations -------------
 ## .... Spatial Maps -------------
+## ....** Designate plot dimensions --------
+
+# Create dimensions according to the dimensions of input raster
+plot_h <- dim(layers)[1] / 100
+plot_w <- dim(layers)[2] / 100
+# Find bigger of two dimensions
+max_d <- ifelse(plot_w > plot_h, plot_w, plot_h)
+# We don't want to save any files as too big. If the bigger dimension is 
+# greater than 10, than scale both dimensions so larger dimension equals 10
+plot_h <- ifelse(max_d > 10, plot_h / (max_d / 10))
+plot_w <- ifelse(max_d > 10, plot_w / (max_d / 10))
+
+## ....** For environmental layers -----------
 count <- 0
 maps <- lapply(chosen_layers, function(foo) {
   if (foo != "landcover") {
@@ -83,8 +109,9 @@ maps <- lapply(chosen_layers, function(foo) {
     ggsave(plot = map, filename = paste0("figures/point_selection/", foo, 
                                          "_", filepattern, "_", n_sites, 
                                          "_map.png"),
+           # Add some to width for large landcover legend
            # Landcover map wider width to provide room for class names
-           height = 5, width = 8)
+           height = plot_h, width = plot_w + (plot_w * 0.25))
   } else {
     map <- ggplot(data = df, aes(x, y)) +
       geom_raster(aes(fill = vals), alpha = 0.7) +
@@ -98,9 +125,50 @@ maps <- lapply(chosen_layers, function(foo) {
     ggsave(plot = map, filename = paste0("figures/point_selection/", foo, 
                                          "_", filepattern, "_", n_sites, 
                                          "_map.png"),
-           height = 5, width = 6)
+           # Create dimensions according to the dimensions of input raster
+           # Add some to width for legend
+           height = plot_h, width = plot_w + (plot_w * 0.08))
   }
 })
+
+## ....** For bins -----------
+
+dim1_plot <- ggplot(data = dims_df, aes(x, y)) +
+  geom_raster(aes(fill = `Dim 1`)) +
+  scale_fill_gradientn(colours = wesanderson::wes_palette("Zissou1", 100, type = "continuous")) +
+  theme_void() +
+  theme(text = element_text(size = 28))
+
+dim2_plot <- ggplot(data = dims_df, aes(x, y)) +
+  geom_raster(aes(fill = `Dim 2`)) +
+  scale_fill_gradientn(colours = wesanderson::wes_palette("GrandBudapest1", 100, type = "continuous")) +
+  theme_void() +
+  theme(text = element_text(size = 28))
+
+dim3_plot <- ggplot(data = dims_df, aes(x, y)) +
+  geom_raster(aes(fill = `Dim 3`)) +
+  scale_fill_gradientn(colours = wesanderson::wes_palette("Rushmore1", 100, type = "continuous")) +
+  theme_void() +
+  theme(text = element_text(size = 28))
+
+bin_plot <- ggplot(data = binID_df, aes(x, y)) +
+  geom_raster(aes(fill = Bins)) +
+  scale_fill_manual(values = bin_pal) +
+  theme_void() +
+  theme(legend.text = element_blank(),
+        text = element_text(size = 32))
+
+## Arrange plots
+dim_bin_plot <- arrangeGrob(dim1_plot, dim2_plot, dim3_plot,
+                             bin_plot, layout_matrix = rbind(c(1,2,3),
+                                                             c(4,4,4),
+                                                             c(4,4,4)))
+
+ggsave(plot = dim_bin_plot, filename = paste0("figures/point_selection/bin_maps_",
+                                     filepattern, "_", n_sites, ".png"),
+       # Create dimensions according to the dimensions of input raster
+       # Add some to width for legend
+       height = plot_h * 2, width = 2 * (plot_w + (plot_w * 0.08)))
 
 ## ....Distribution of Environmental Layers -----------
 
