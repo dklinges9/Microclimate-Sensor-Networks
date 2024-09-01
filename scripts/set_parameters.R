@@ -9,7 +9,7 @@ cat("Setting parameters...\n")
 
 # What is the name of the landscape? This will be appended to names of output files
 # If left NA will name files according to the chosen spatial extent
-landscape_name <- "south_sumatra"
+landscape_name <- "flanders"
 
 # Your budget for sensors. This will be used to constrain the amount of 
 # environmental space that you can sample, and inform the power analysis
@@ -23,7 +23,7 @@ cost_per_sensor <- 100
 # power analysis and chosen budget
 # Also note that depending on your study design, you may want to place multiple
 # sensors at a given spatial point (e.g. at different heights/depths).
-n_sites <- 100
+n_sites <- 150
 
 ## Spatial parameters ------------
 
@@ -34,11 +34,10 @@ n_sites <- 100
 # variables 
 # Examples:
 # spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482) 
-# spatial_extent <- c(9686288.36062736, 9793781.96903831, -370468.177723256, -320855.743072046)
+# spatial_extent <- c(9686288, 9730000, -370468, -348855)
 # spatial_extent <- c(102.583, 103.728, -3.44038, -3)
 
-spatial_extent <- c(9686288, 9730000, -370468, -348855)
-
+spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482)
 # Alternatively a path to a raster file or shapefile can be provided
 # (I HAVEN'T YET MADE THESE OPTIONS FUNCTIONAL)
 # extent_rast <- NA
@@ -75,14 +74,14 @@ min_distance <- 100
 # This parameter sets a minimum distance between all locations
 # Must be in same units as projection_units
 # Can divide meters by 120000 for quick (rough) translation to decimal degrees
-max_distance <- 10000
+max_distance <- 25000
 
 ## Environmental layers ---------
 # What environmental layers do you wish to use to inform the sampling algorithm?
 # chosen_layers must be a string of the names of a subset (or all) of the following:
 # elevation, slope, aspect, landcover, macroclimate, soiltemp
 chosen_layers <- c("elevation", "slope", "aspect", "landcover", 
-                   "soiltemp")
+                   "soiltemp", "macroclimate")
 # NOTE: elevation, macroclimate, and soiltemp are all highly correlated. We 
 # recommend choosing from just one of these layers depending on your needs
 
