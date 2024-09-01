@@ -627,7 +627,42 @@ if ("landcover" %in% chosen_layers) {
 selected_sites <- selected_sites %>% 
   dplyr::select(x, y, Dim.1, Dim.2, Dim.3, dim1_bin, dim2_bin, dim3_bin, everything())
 
-## Write out CSV of selected sites -----------
+## Create rasters from landscape bins -------
+
+## All values that are NA for the bins are water pixels
+bins_df <- as.data.frame(layers[[1]], xy = T) %>% 
+  dplyr::select(x, y) %>% 
+  distinct() %>% 
+  full_join(terrain_df) %>% 
+  # Remove x and y as we don't need those columns
+  dplyr::select(-x, -y)
+
+# Create a template raster from layers
+bin_r <- layers[[1]]
+
+dim1_r <- terra::setValues(bin_r, bins_df %>% 
+                                dplyr::select(Dim.1))
+dim2_r <- terra::setValues(bin_r, bins_df %>% 
+                             dplyr::select(Dim.2))
+dim3_r <- terra::setValues(bin_r, bins_df %>% 
+                             dplyr::select(Dim.3))
+# 3 layers, one for each of ordination dimensions 1, 2, and 3
+dim_values_r <- c(dim1_r, dim2_r, dim3_r)
+names(dim_values_r) <- c("Dim_1", "Dim_2", "Dim_3")
+
+dim1_id_r <- terra::setValues(bin_r, bins_df %>% 
+                             dplyr::select(dim1_bin))
+dim2_id_r <- terra::setValues(bin_r, bins_df %>% 
+                             dplyr::select(dim2_bin))
+dim3_id_r <- terra::setValues(bin_r, bins_df %>% 
+                             dplyr::select(dim3_bin))
+binString_id_r <- terra::setValues(bin_r, bins_df %>% 
+                             dplyr::select(bin_string))
+# 4 layers, one for each of ordination dimensions 1, 2, and 3 AND the collective bin ID
+bin_id_r <- c(dim1_id_r, dim2_id_r, dim3_id_r, binString_id_r)
+names(bin_id_r) <- c("Dim_1", "Dim_2", "Dim_3", "Bins")
+
+## Write out CSV of selected sites, and rasters of environmental bins -----------
 
 # Check if CSV for selected sites already exists, if so confirm with user 
 # before overwriting
@@ -679,3 +714,10 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
                                    filepattern, "_", n_sites, ".csv"))
 }
 
+# Save bin rasters
+save_raster(dim_values_r, 
+            "data/landscape_data/dim_values_", 
+            filepattern)
+save_raster(bin_id_r, 
+            "data/landscape_data/bin_id_", 
+            filepattern)
