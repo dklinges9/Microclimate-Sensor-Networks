@@ -95,8 +95,8 @@ plot_w <- dim(layers)[2] / 100
 max_d <- ifelse(plot_w > plot_h, plot_w, plot_h)
 # We don't want to save any files as too big. If the bigger dimension is 
 # greater than 10, than scale both dimensions so larger dimension equals 10
-plot_h <- ifelse(max_d > 10, plot_h / (max_d / 10))
-plot_w <- ifelse(max_d > 10, plot_w / (max_d / 10))
+plot_h <- ifelse(max_d > 10, plot_h / (max_d / 10), plot_h)
+plot_w <- ifelse(max_d > 10, plot_w / (max_d / 10), plot_w)
 
 ## ....** For environmental layers -----------
 count <- 0
