@@ -20,7 +20,7 @@ if (complete.cases(landscape_name)) {
   filepattern <- paste(round(spatial_extent, 0), collapse = "_")
 }
 
-## ....Load in files ---------
+## .... Load in files ---------
 
 layers <- rast(paste0("data/spatial_drivers/combined/layers_",
                       round(chosen_rez, 4), "_", filepattern, ".tif"))
@@ -32,13 +32,17 @@ layers_df_tall <- layers_df %>%
               dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>%
               mutate(landcover = as.factor(landcover)) %>% 
               dplyr::distinct(landcover, landcover_class, hex_color), by = join_by(landcover, landcover_class)) %>% 
-  # Convert landcover back to numeric for plotting purposes
+  # Convert landcover to character to preserve numeric values, then back to 
+  # numeric for plotting purposes
+  # If you convert straight to numeric (without character) then the value will
+  # equal the factor level, eg. 1, 2, 3, etc. rather than the landscale number
+  mutate(landcover = as.character(landcover)) %>%
   mutate(landcover = as.double(landcover)) %>%
   pivot_longer(all_of(chosen_layers), names_to = "chsen_layers", values_to = "vals")
 
 ## Color palettes --------
 
-## ....For landcover ----------------
+## .... For landcover ----------------
 # Filter to just landcover classes that are present 
 # Because landcover classes will be displayed alphabetically, first sort
 # according to landcover class
@@ -55,7 +59,7 @@ viridis_pals[is.na(viridis_pals)] <- letters[1:length(viridis_pals[is.na(viridis
 
 ## Visualizations -------------
 
-## ....Spatial Maps -------------
+## .... Spatial Maps -------------
 count <- 0
 maps <- lapply(chosen_layers, function(foo) {
   if (foo != "landcover") {
