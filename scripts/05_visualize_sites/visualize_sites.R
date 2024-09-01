@@ -71,6 +71,19 @@ bin_pal <- c(brewer.pal(8, "Set2"),
              brewer.pal(12, "Paired"),
              brewer.pal(8, "Dark2"))
 
+if (length(unique(binID_df$Bins))) {
+  bin_pal <- c(brewer.pal(8, "Set2"),
+               brewer.pal(12, "Paired"),
+               brewer.pal(8, "Dark2"),
+               brewer.pal(9, "YlOrRd"),
+               brewer.pal(11, "PRGn"),
+               brewer.pal(11, "BrBG"),
+               brewer.pal(11, "RdBu"),
+               brewer.pal(11, "PuOr"),
+               brewer.pal(11, "PiYG"))
+  # Randomize order
+  bin_pal <- sample(bin_pal, size = length(bin_pal), replace = FALSE)
+}
 ## Visualizations -------------
 ## .... Spatial Maps -------------
 ## ....** Designate plot dimensions --------
@@ -137,26 +150,29 @@ dim1_plot <- ggplot(data = dims_df, aes(x, y)) +
   geom_raster(aes(fill = `Dim 1`)) +
   scale_fill_gradientn(colours = wesanderson::wes_palette("Zissou1", 100, type = "continuous")) +
   theme_void() +
-  theme(text = element_text(size = 28))
+  theme(text = element_text(size = 26))
 
 dim2_plot <- ggplot(data = dims_df, aes(x, y)) +
   geom_raster(aes(fill = `Dim 2`)) +
   scale_fill_gradientn(colours = wesanderson::wes_palette("GrandBudapest1", 100, type = "continuous")) +
   theme_void() +
-  theme(text = element_text(size = 28))
+  theme(text = element_text(size = 26))
 
 dim3_plot <- ggplot(data = dims_df, aes(x, y)) +
   geom_raster(aes(fill = `Dim 3`)) +
   scale_fill_gradientn(colours = wesanderson::wes_palette("Rushmore1", 100, type = "continuous")) +
   theme_void() +
-  theme(text = element_text(size = 28))
+  theme(text = element_text(size = 26))
 
 bin_plot <- ggplot(data = binID_df, aes(x, y)) +
   geom_raster(aes(fill = Bins)) +
   scale_fill_manual(values = bin_pal) +
   theme_void() +
   theme(legend.text = element_blank(),
-        text = element_text(size = 32))
+        # Legend unit inversely proportional to number of bins (more bins, shrink 
+        # legend unit)
+        legend.key.size = unit((18 / length(unique(bin_pal))), "in"),
+        text = element_text(size = 30))
 
 ## Arrange plots
 dim_bin_plot <- arrangeGrob(dim1_plot, dim2_plot, dim3_plot,
