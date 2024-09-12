@@ -4,7 +4,7 @@ cat("\n\nPrepping data for visualization....\n")
 ## Workspace prep --------------
 
 ## .... Load dependencies ---------
-pkgs <- c("viridis", "tidyr", "readr", "RColorBrewer", "ggplot2", "terra", "gridExtra")
+pkgs <- c("viridis", "tidyr", "dplyr", "readr", "RColorBrewer", "ggplot2", "terra", "gridExtra")
 
 for (i in seq_along(pkgs)) {
   suppressPackageStartupMessages(
@@ -27,6 +27,7 @@ layers <- rast(paste0("data/spatial_drivers/combined/layers_",
 
 dims <- rast(paste0("data/landscape_data/dim_values_", filepattern, ".tif"))
 bin_id <- rast(paste0("data/landscape_data/bin_id_", filepattern, ".tif"))
+landcover_link <- suppressMessages(read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv"))
 
 ## Data Curation for visuals ----------
 
@@ -113,7 +114,7 @@ maps <- lapply(chosen_layers, function(foo) {
     map <- ggplot(data = df, aes(x, y)) +
       geom_point(aes(color = landcover_class)) +
       scale_color_manual(values = landcover_colors) +
-      geom_point(data = selected_sites, aes(x, y), pch=21, fill = "white", colour = "black") +
+      geom_point(data = selected_sites, aes(x, y), size =3, pch=21, fill = "white", colour = "black") +
       labs(color = "") +
       theme_void()
     
@@ -129,7 +130,7 @@ maps <- lapply(chosen_layers, function(foo) {
     map <- ggplot(data = df, aes(x, y)) +
       geom_raster(aes(fill = vals), alpha = 0.7) +
       scale_fill_viridis(option = viridis_pals[count]) +
-      geom_point(data = selected_sites, aes(x, y), pch=21, fill = "white", colour = "black") +
+      geom_point(data = selected_sites, aes(x, y), size =3, pch=21, fill = "white", colour = "black") +
       labs(color = "") +
       theme_void()
     
