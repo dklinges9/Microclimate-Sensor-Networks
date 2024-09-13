@@ -680,6 +680,8 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
   
   if (tolower(ans1) %in% c("y", "yes")) {
     
+    write_csv(layers_df, paste0("data/landscape_data/layers_", 
+                                filepattern, "_", n_sites, ".csv"))
     write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", filepattern,
                                  "_", n_sites, ".csv"))
     write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_",
@@ -708,6 +710,8 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
   }
   
   # Now write out files
+  write_csv(layers_df, paste0("data/landscape_data/layers_", 
+                               filepattern, "_", n_sites, ".csv"))
   write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", 
                                filepattern, "_", n_sites, ".csv"))
   write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_",

@@ -29,20 +29,38 @@ dims <- rast(paste0("data/landscape_data/dim_values_", filepattern, ".tif"))
 bin_id <- rast(paste0("data/landscape_data/bin_id_", filepattern, ".tif"))
 landcover_link <- suppressMessages(read_csv("data/spatial_drivers/landcover/original/esa_cci/esa_cci_landcover_link.csv"))
 
+if (!exists("layers_df")) {
+  layers_df <- read_csv(paste0("data/landscape_data/layers_", 
+                               filepattern, "_", n_sites, ".csv")) 
+}
+
+if (!exists("selected_sites")) {
+  selected_sites <- read_csv(paste0("data/chosen_sites/selected_sites_",
+                                    filepattern, "_", n_sites, ".csv"))
+}
+
 ## Data Curation for visuals ----------
 
-layers_df_tall <- layers_df %>% 
-  left_join(landcover_link %>% 
-              dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>%
-              mutate(landcover = as.factor(landcover)) %>% 
-              dplyr::distinct(landcover, landcover_class, hex_color), by = join_by(landcover, landcover_class)) %>% 
-  # Convert landcover to character to preserve numeric values, then back to 
-  # numeric for plotting purposes
-  # If you convert straight to numeric (without character) then the value will
-  # equal the factor level, eg. 1, 2, 3, etc. rather than the landscale number
-  mutate(landcover = as.character(landcover)) %>%
-  mutate(landcover = as.double(landcover)) %>%
-  pivot_longer(all_of(chosen_layers), names_to = "chsen_layers", values_to = "vals")
+# Particular curation if landcover is one of the predictor layers
+if ("landcover" %in% chosen_layers) {
+  layers_df_tall <- layers_df %>% 
+    mutate(landcover = as.factor(landcover)) %>% 
+    left_join(landcover_link %>% 
+                dplyr::rename(landcover = grouped_number, landcover_class = grouped_class) %>%
+                mutate(landcover = as.factor(landcover)) %>% 
+                dplyr::distinct(landcover, landcover_class, hex_color), by = join_by(landcover, landcover_class)) %>% 
+    # Convert landcover to character to preserve numeric values, then back to 
+    # numeric for plotting purposes
+    # If you convert straight to numeric (without character) then the value will
+    # equal the factor level, eg. 1, 2, 3, etc. rather than the landscale number
+    mutate(landcover = as.character(landcover)) %>%
+    mutate(landcover = as.double(landcover)) %>%
+    pivot_longer(all_of(chosen_layers), names_to = "chsen_layers", values_to = "vals")
+} else {
+  layers_df_tall <- layers_df %>% 
+    pivot_longer(all_of(chosen_layers), names_to = "chsen_layers", values_to = "vals")
+}
+
 
 # Curate bin layers
 dims_df <- as.data.frame(dims, xy = T) %>% 
@@ -52,14 +70,15 @@ binID_df <- as.data.frame(bin_id, xy = T)
 
 ## Color palettes --------
 
-## .... For landcover ----------------
-# Filter to just landcover classes that are present 
-# Because landcover classes will be displayed alphabetically, first sort
-# according to landcover class
-landcover_colors <- layers_df_tall %>% 
-  dplyr::arrange(landcover_class) %>% 
-  distinct(landcover_class, hex_color) %>% 
-  dplyr::pull(hex_color)
+if ("landcover" %in% chosen_layers) {
+  # Filter to just landcover classes that are present 
+  # Because landcover classes will be displayed alphabetically, first sort
+  # according to landcover class
+  landcover_colors <- layers_df_tall %>% 
+    dplyr::arrange(landcover_class) %>% 
+    distinct(landcover_class, hex_color) %>% 
+    dplyr::pull(hex_color)
+}
 
 letters <- c("A", "C", "E", "F", "B", "D", "G", "H")
 viridis_pals <- letters[1:length(chosen_layers[!chosen_layers %in% "landcover"])]
