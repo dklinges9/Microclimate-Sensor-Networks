@@ -3,15 +3,28 @@
 
 ![](img/Screenshot_1.png)
 
-#### **Main**
+### Instructions
+
+#### **1. Set Parameters**
+_scripts/set_parameters.R_  
+
+*Requires user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on. By default provides sensor selection for a landscape in South Sumatra. 
+
+#### **2. Main Program**
 _scripts/main.R_  
 
 **This file is your home base.** Used to run all steps in the program, in their appropriate sequence. Running scripts out of order may cause the data pipeline to be interrupted due to error messages.
 
-#### **Set Parameters**
-_scripts/set_parameters.R_  
+#### **3. Inspect Outputs**
 
-*Requires user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on. By default provides sensor selection for a landscape in South Sumatra.    
+- CSV of chosen sensor locations, and environmental information corresponding to these locations, is provided in the directory `data/chosen_sites/`  
+- CSVs and TIF rasters of landscape environmental variation and bins are provided in the directory `data/landscape_data/`  
+- Visualizations of environmental variation in your landscape, locations of bins, and locations of chosen sensor locations are provided in `figures/point_selection/`.  
+- TIF rasters of input environmental layers are queried and stored to the directory `data/spatial_drivers`.  
+- Additional diagnostics about chosen sensor locations, if necessary, are provided in the directory `data/chosen_sites/diagnostics/`.  
+   
+_That's it!_ See below for descriptions of other source files, which should not be modified (unless further customization desired).  
+
 
 #### **Source Code**
 _scripts/00_source/functions.R_  

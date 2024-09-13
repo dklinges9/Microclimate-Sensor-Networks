@@ -6,7 +6,7 @@
 
 
 ## If running the program for the first time: run these lines of code
-## Please execute each of these lines of code one at a time, as some scripts
+## Please execute each of these lines of code ONE AT A TIME, as some scripts
 ## require user input in the console
 source("scripts/00_source/check_pkgs.R")
 source("scripts/00_source/functions.R")
