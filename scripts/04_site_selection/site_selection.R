@@ -630,7 +630,12 @@ selected_sites <- selected_sites %>%
 ## Create rasters from landscape bins -------
 
 ## All values that are NA for the bins are water pixels
-bins_df <- as.data.frame(layers[[1]], xy = T) %>% 
+bins_df <- layers[[1]] %>% 
+  # Trim so that the dimensions of this raster will match those of bin_r
+  trim() %>% 
+  # But also keep internal NAs: this will then keep any masked values if there
+  # is a layer_mask
+  as.data.frame(xy = T, na.rm = F) %>% 
   dplyr::select(x, y) %>% 
   distinct() %>% 
   full_join(terrain_df) %>% 
@@ -638,7 +643,9 @@ bins_df <- as.data.frame(layers[[1]], xy = T) %>%
   dplyr::select(-x, -y)
 
 # Create a template raster from layers
-bin_r <- layers[[1]]
+bin_r <- layers[[1]] %>% 
+  # Trim so that the dimensions of this raster will match those of bins_df
+  trim()
 
 dim1_r <- terra::setValues(bin_r, bins_df %>% 
                                 dplyr::select(Dim.1))
@@ -686,7 +693,7 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
                                  "_", n_sites, ".csv"))
     write_csv(selected_sites, paste0("data/chosen_sites/selected_sites_",
                                      filepattern, "_", n_sites, ".csv"))
-    cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", filepattern, "_", n_sites, ".csv"))
+    cat("\n\nSelected sites are saved to a CSV file:\n", paste0("data/chosen_sites/selected_sites_", filepattern, "_", n_sites, ".csv\n"))
   }
   if (tolower(ans1) %in% c("n", "no")) {
     cat("File not overwritten, but selected sites still available in object `selected_sites`.\n")

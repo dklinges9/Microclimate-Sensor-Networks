@@ -101,7 +101,7 @@ if (any(complete.cases(custom_layers))) {
       if (gsub(" \\+no_defs", "", terra::crs(r, proj = T)) != 
           gsub(" \\+no_defs", "", projection)) {
         stop("Projection for custom layer ", l, 
-             "does not match the specified `projection`.")
+             " does not match the specified `projection`.")
       }
       
       # Check extent of custom layer
