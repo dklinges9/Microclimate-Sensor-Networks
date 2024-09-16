@@ -444,7 +444,7 @@ if(any(!is.na(selected_sites))) {
     selected_sites <- selected_sites %>% 
       left_join(terrain_df %>% 
                   dplyr::select(x, y, dim1_bin, dim2_bin, dim3_bin),
-                by = join_by(x, y, dim1_bin, dim2_bin, dim3_bin)) %>% 
+                by = join_by(x, y)) %>% 
       mutate(bin_string = paste(dim1_bin, dim2_bin, dim3_bin))
     
     # Remove bins represented by required_sites
