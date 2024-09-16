@@ -131,8 +131,8 @@ maps <- lapply(chosen_layers, function(foo) {
     df <- df %>% 
       mutate(vals = as.factor(vals))
     map <- ggplot(data = df, aes(x, y)) +
-      geom_point(aes(color = landcover_class)) +
-      scale_color_manual(values = landcover_colors) +
+      geom_raster(aes(fill = landcover_class)) +
+      scale_fill_manual(values = landcover_colors) +
       geom_point(data = selected_sites, aes(x, y), size =3, pch=21, fill = "white", colour = "black") +
       labs(color = "") +
       theme_void()
