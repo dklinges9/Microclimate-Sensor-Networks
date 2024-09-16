@@ -221,7 +221,7 @@ if (continue) {
   
   if (any(complete.cases(custom_layers_test))) {
     custom_layers_r <- lapply(custom_layers_r, function(r) {
-      r <- terra::crop(r, spatial_extent_buffer)
+      r <- terra::crop(r, terra::project(spatial_extent_buffer, projection))
       return(r)
     })
   }
