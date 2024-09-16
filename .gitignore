@@ -11,11 +11,11 @@ data/spatial_drivers/macroclimate/worldclim/*
 data/landscape_data/*
 
 # Test and example files
-data/chosen_sites/old_examples/*
-figures/point_selection/paper_examples/*
-figures/point_selection/smokies_nodist*
-figures/point_selection/smokes_dist/*
+data/chosen_sites/zz_examples/*
+docs/analysis/zz_examples/*
+figures/point_selection/*
 figures/paper_figures/*
+figures/analysis/zz_examples/*
 data/paper_data/*
 
 # History files
