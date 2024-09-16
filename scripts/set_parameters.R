@@ -9,11 +9,12 @@ cat("Setting parameters...\n")
 
 # What is the name of the landscape? This will be appended to names of output files
 # If left NA will name files according to the chosen spatial extent
-landscape_name <- "flanders"
+landscape_name <- "madagascar"
 
 # Your budget for sensors. This will be used to constrain the amount of 
 # environmental space that you can sample, and inform the power analysis
-budget <- 15000
+budget <- 10000
+# And, the cost of each sensor
 cost_per_sensor <- 100
 
 # How many sensor sites do you want?
@@ -23,7 +24,7 @@ cost_per_sensor <- 100
 # power analysis and chosen budget
 # Also note that depending on your study design, you may want to place multiple
 # sensors at a given spatial point (e.g. at different heights/depths).
-n_sites <- 150
+n_sites <- 100
 
 ## Spatial parameters ------------
 
@@ -32,31 +33,23 @@ n_sites <- 150
 # We suggest specifying an extent that is slightly larger than actual target extent,
 # to account for lost edges when reprojecting and when calculating topographical
 # variables 
-# Examples:
-# spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482) 
-# spatial_extent <- c(9686288, 9730000, -370468, -348855)
-# spatial_extent <- c(102.583, 103.728, -3.44038, -3)
-
-spatial_extent <- c(170939.777724312, 518527.501269666, 5355763.70341275, 5493712.58119482)
-# Alternatively a path to a raster file or shapefile can be provided
-# (I HAVEN'T YET MADE THESE OPTIONS FUNCTIONAL)
-# extent_rast <- NA
-# extent_shp <- NA
+# Example provided below for a region in Southeastern Madagascar
+spatial_extent <- c(4361769.08128998, 4408800.03005205, -2304731.74676982, -2271216.33643937)
 
 # Provide the projection of the specified spatial_extent
 # Some example projections:
-# "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+# "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 # "+proj=longlat +datum=WGS84" 
 # Note that projections with units in meters will entail MUCH faster access
 # of a Digital Elevation Model (DEM) in get_dem.R
-projection <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+projection <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs" 
 
 # What are the units of your projection? Must be either decimal degrees (dd) 
 # or meters (m)
 projection_units <- "m" # c("m", "dd") for 'meters' and 'decimal degrees'
 
 # Your desired resolution of the Digital Elevation Model (DEM). Finer resolution
-# means slower processing This resolution will also determine the resolution 
+# means slower processing. This resolution will also determine the resolution 
 # at which all analyses are conducted (other layers resampled to this resolution)
 # Can divide meters by 120000 for quick (rough) translation to decimal degrees
 chosen_rez <- 100
@@ -67,14 +60,14 @@ chosen_rez <- 100
 # means program might take longer)
 # Must be in same units as projection_units
 # Can divide meters by 120000 for quick (rough) translation to decimal degrees
-min_distance <- 100
+max_distance <- 20000
 
 # What is the minimum distance between any two points that you will tolerate?
 # In theory, the program might choose two locations right next to each other.
 # This parameter sets a minimum distance between all locations
 # Must be in same units as projection_units
 # Can divide meters by 120000 for quick (rough) translation to decimal degrees
-max_distance <- 25000
+min_distance <- 500
 
 ## Environmental layers ---------
 # What environmental layers do you wish to use to inform the sampling algorithm?
@@ -83,7 +76,8 @@ max_distance <- 25000
 chosen_layers <- c("elevation", "slope", "aspect", "landcover", 
                    "soiltemp", "macroclimate")
 # NOTE: elevation, macroclimate, and soiltemp are all highly correlated. We 
-# recommend choosing from just one of these layers depending on your needs
+# recommend choosing from just one of these layers depending on your needs. All
+# three are in the set above by default for illustrative purposes.
 
 # Are there other spatial layers of your choice that you wish to be included
 # to inform the site selection algorithm? Provide the filepaths of these layers
@@ -99,10 +93,9 @@ chosen_layers <- c("elevation", "slope", "aspect", "landcover",
 custom_layers <- NA
 # What are the desired names for each layer's variable?
 custom_layers_names <- NA
-
 # Example for Madagascar:
-# custom_layers <- c("data/spatial_drivers/vegetation/global_forest_change/original/Hansen_GFC-2020-v1.8_treecover2000_20S_040E.tif", "PATH/TO/LAYER2", "PATH/TO/LAYER3")
-# custom_layers_names <- c("treecover", "test1", "test2")
+# custom_layers <- c("data/spatial_drivers/vegetation/madagascar_treecover2000.tif")
+# custom_layers_names <- c("treecover2000")
 
 # Do you want to mask your target landscape so that only certain grid cells are
 # eligible for selection? This may be because you are only interested in a certain
@@ -115,10 +108,11 @@ custom_layers_names <- NA
 # Must have numeric values
 # Can be any resolution
 layer_mask <- NA
-
-# Example for Madagascar:
-# layer_mask <- rast("data/spatial_drivers/topography/derivative/aspect_4e-04_madagascar1.tif")
-# terra::values(layer_mask) <- round(runif(length(terra::values(layer_mask)), min= 0, max = 1))
+# Example for Madagascar: Perhaps you are only interested in deploying sensors 
+# within forests. Here, we'll use a tree cover map from year 2000, and recode 
+# this map so that "forest" is defined as tree cover > 50%
+# layer_mask <- rast("data/spatial_drivers/vegetation/madagascar_treecover2000.tif")
+# layer_mask[] <- ifelse(layer_mask[] >= 50, 1, 0)
 
 # When selecting sites, do you want to give more weight to outliers within 
 # the environmental space (e.g. more topographically complex areas)? TRUE or FALSE
@@ -158,27 +152,27 @@ r2 <- 0.15
 # If you include columns dim1_bin, dim2_bin, and dim3_bin, must set 
 # program_rerun to TRUE and provide landscape_bins (see below)
 required_sites <- NA
-# For example, randomly choosing 10 locations from a prior run for Oman: 
-# required_sites <- read_csv("data/chosen_sites/selected_sites_100_oman1.csv") %>%
-#   dplyr::sample_n(10)
+# For example, randomly choosing 50 locations from a prior run for Madagascar, to
+# represent 50 good/feasible sites that have already been visited: 
+# required_sites <- read_csv("data/chosen_sites/selected_sites_madagascar_100.csv") %>%
+#   dplyr::sample_n(50)
 
 # Or, another example in which columns dim1_bin, dim2_bin, and dim3_bin are absent,
-# and the program assumes the user has not yet run the program:
-# required_sites <- read_csv("data/chosen_sites/selected_sites_100_oman1.csv") %>%
-#   dplyr::sample_n(10) %>% 
+# and the program assumes the user has not yet run the program. Just 10 required sites:
+# required_sites <- read_csv("data/chosen_sites/selected_sites_madagascar_100.csv") %>%
+#   dplyr::sample_n(10) %>%
 #   dplyr::select(x, y)
 
 ## Program re-run parameters --------
 
-# Are you re-running the program it update chosen sensor locations? TRUE or FALSE
+# Are you re-running the program to update chosen sensor locations? TRUE or FALSE
 program_rerun <- FALSE
 
 # If TRUE, you need to provide the bin values from the last program run. This was
 # saved as a CSV as "data/landscape_data/landscape_bins_*.csv"
 # Otherwise, leave as NA
 landscape_bins <- NA
-
-# Example for Flanders:
-# landscape_bins <- read_csv("data/landscape_data/landscape_bins_flanders_150.csv")
+# Example for Madagascar:
+# landscape_bins <- read_csv("data/landscape_data/landscape_bins_madagascar_100.csv")
 
 cat("Setting parameters - OK!\n")
