@@ -88,6 +88,56 @@ if (projection_units == "m") {
   }
 }
 
+## ....Check if spatial driver data are downloaded ------------
+
+# Check if landcover file is available
+if ("landcover" %in% chosen_layers) {
+  if (!file.exists("data/spatial_drivers/landcover/original/esa_cci/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif")) {
+    cat(red("You've selected landcover as one of your chosen_layers, but do not have the corresponding ESA CCI landcover spatial file downloaded into the correct location (`data/spatial_drivers/landcover/original/esa_cci/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif`)\n"))
+    
+    cat("
+    
+    INSTRUCTIONS FOR DOWNLOADING ESA CCI LANDCOVER FILE:
+        
+        1. Visit this link:
+        https://maps.elie.ucl.ac.be/CCI/viewer/download.php
+        
+        2. Under `Data Access` to the right, please input your Name, Organization, and email, agree to the Terms and Conditions, and press `Validate`.
+        
+        3. The page should then refresh. Scroll down to 'LC map 2015' and click on the down arrow next to '1 tif file, zip compression - 258Mo'. This should be the link:
+        ftp://geo10.elie.ucl.ac.be/CCI/LandCover/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.zip
+        
+        4. Depending on the Internet browser you are using, the file may begin to download. It is likely, however, that you are redirected to download the file via FTP (File Transfer Protocol). It is recommended to use FileZilla, which can be installed here:
+        https://filezilla-project.org/
+        
+        Then, follow the instructions listed on the ESA CCA page under 'Download via FTP'. Specifically:
+        
+        4a. Open FileZilla
+        4b. Paste 'geo10.elie.ucl.ac.be' into the Host option in the top-left of the window
+        4c. Leave the username, password, and port empty, and press 'Quickconnect'
+        4d. You will likely receive a pop-up concerning 'Insecure FTP connection'. Press OK.
+        4e. The panel in the bottom-right labeled 'Filename' should now display a folder called 'CCI'. Click on that directory, then LandCover.
+        4f. On the file 'ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.zip', double click, or right click > Download. The download should now commence. Once completed, the file will be stored at the path displayed on the tab 'Successful transfers' at the bottom of the window.
+        
+        5. Once the file is downloaded, unzip the .zip file, and place the corresponding .tif file into the following directory: 'data/spatial_drivers/landcover/original/esa_cci/'
+        ")
+    
+    stop("See instructions above for downloading the landcover layer, or remove 'landcover' from your chosen_layers.")
+  }
+}
+
+if ("macroclimate" %in% chosen_layers) {
+  if (!dir.exists("data/spatial_drivers/macroclimate/worldclim/climate/")) {
+    cat(red("You've selected macroclimate as one of your chosen_layers, but do not have any WorldClim spatial files downloaded into the correct location ('data/spatial_drivers/macroclimate/worldclim/climate/'). These will be automatically downloaded when you run scripts/03_data_extraction/prep_spatial.R \n"))
+  }
+}
+
+if ("soiltemp" %in% chosen_layers) {
+  if (!file.exists("data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif")) {
+    cat(red("You've selected soiltemp as one of your chosen_layers, but do not have the corresponding SoilTemp global map downloaded into the correct location ('data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif'). This will be automatically downloaded when you run scripts/03_data_extraction/prep_spatial.R \n"))
+  }
+}
+
 ## Check custom layers and layer mask --------------------
 if (any(complete.cases(custom_layers))) {
   custom_layers_test <- lapply(custom_layers, function(l) {
