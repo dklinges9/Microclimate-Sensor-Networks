@@ -3,9 +3,9 @@
 cat("Checking installed packages\n")
 
 # list all required packages for the scripts to run
-pkgs <- c("tidyverse", "elevatr", "rnoaa", "microclima", "terra", "landscapemetrics",
-          "pwr", "sf", "factoextra", "FactoMineR", "ggplot2", "RColorBrewer", "viridis", 
-          "crayon", "geodata", "zen4R", "wesanderson", "gridExtra") # crayon required?
+pkgs <- c("tidyverse", "elevatr", "terra", "landscapemetrics",
+          "pwr", "factoextra", "FactoMineR", "ggplot2", "RColorBrewer", "viridis", 
+          "crayon", "geodata", "sf", "zen4R", "wesanderson", "gridExtra") # crayon required?
 
 # find the packages that have not yet been installed on the device
 new_pkgs <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
@@ -22,8 +22,9 @@ if (length(new_pkgs) == 0) {
     cat("\033[0;31mWould you like to install these packages and their dependencies? (Y/N): \033[0m\n")
     ans1 <- readline(" ")
 
-    # for microclim a, installation via github (requires devtools, Rtools, and rnoaa dependency)
-    if (sum(c("microclima", "zen4R") %in% new_pkgs)>0) {
+    # for zen4R, installation via github (requires devtools, and Rtools dependency)
+    if (sum(c("zen4R") %in% new_pkgs)>0) {
+      cat("Package 'zen4R' not installed, and must be installed from GitHub...\n")
       if (!"devtools" %in% installed.packages()[,"Package"]) {
         ans2 <- readline("Package `devtools` is required to install packages from GitHub.\nInstall devtools? (Y/N): ")
         
@@ -36,14 +37,6 @@ if (length(new_pkgs) == 0) {
           install.packages("devtools")
         }     
       }
-      if ("microclima" %in% new_pkgs) {
-        cat("Installing microclima from GitHub. NOTE: Rtools required (https://cran.rstudio.com/bin/windows/Rtools/).\n")
-        
-        if ("rnoaa" %in% new_pkgs) {
-          devtools::install_github("ropensci/rnoaa") # required dependency for microclima
-        }
-        devtools::install_github("ilyamaclean/microclima")
-      }
       
       if ("zen4R" %in% new_pkgs) {
         cat("Installing zen4R from GitHub. NOTE: Rtools required (https://cran.rstudio.com/bin/windows/Rtools/).\n")
@@ -52,7 +45,7 @@ if (length(new_pkgs) == 0) {
     }
     if (tolower(ans1) %in% c("y", "yes")) {
       cat("Installing packages...\n")
-      install.packages(new_pkgs[!grepl(c("microclima", "rnoaa", "zen4R"), new_pkgs)])
+      install.packages(new_pkgs[!grepl(c("zen4R"), new_pkgs)])
     }
     else warning("Packages have not been installed. Scripts are not guaranteed to run.\n")
   }

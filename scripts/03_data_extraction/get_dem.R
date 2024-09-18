@@ -1,7 +1,7 @@
 ## David Klinges
 ## This script queries a DEM of desired resolution and extent
 
-pkgs <- c("crayon", "elevatr", "microclima", "raster", "terra")
+pkgs <- c("crayon", "elevatr", "raster", "terra")
 
 options("rgdal_show_exportToProj4_warnings"="none") # suppresses rgdal deprecation warning
 
