@@ -154,12 +154,12 @@ r2 <- 0.15
 required_sites <- NA
 # For example, randomly choosing 50 locations from a prior run for Madagascar, to
 # represent 50 good/feasible sites that have already been visited: 
-# required_sites <- read_csv("data/chosen_sites/selected_sites_madagascar_100.csv") %>%
+# required_sites <- readr::read_csv("data/chosen_sites/selected_sites_madagascar_100.csv") %>%
 #   dplyr::sample_n(50)
 
 # Or, another example in which columns dim1_bin, dim2_bin, and dim3_bin are absent,
 # and the program assumes the user has not yet run the program. Just 10 required sites:
-# required_sites <- read_csv("data/chosen_sites/selected_sites_madagascar_100.csv") %>%
+# required_sites <- readr::read_csv("data/chosen_sites/selected_sites_madagascar_100.csv") %>%
 #   dplyr::sample_n(10) %>%
 #   dplyr::select(x, y)
 
@@ -173,6 +173,6 @@ program_rerun <- FALSE
 # Otherwise, leave as NA
 landscape_bins <- NA
 # Example for Madagascar:
-# landscape_bins <- read_csv("data/landscape_data/landscape_bins_madagascar_100.csv")
+# landscape_bins <- readr::read_csv("data/landscape_data/landscape_bins_madagascar_100.csv")
 
 cat("Setting parameters - OK!\n")
