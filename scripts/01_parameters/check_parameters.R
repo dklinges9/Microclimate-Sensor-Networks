@@ -93,7 +93,7 @@ if (projection_units == "m") {
 # Check if landcover file is available
 if ("landcover" %in% chosen_layers) {
   if (!file.exists("data/spatial_drivers/landcover/original/esa_cci/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif")) {
-    cat(red("You've selected landcover as one of your chosen_layers, but do not have the corresponding ESA CCI landcover spatial file downloaded into the correct location (`data/spatial_drivers/landcover/original/esa_cci/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif`)\n"))
+    cat(crayon::red("You've selected landcover as one of your chosen_layers, but do not have the corresponding ESA CCI landcover spatial file downloaded into the correct location (`data/spatial_drivers/landcover/original/esa_cci/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2015-v2.0.7.tif`)\n"))
     
     cat("
     
@@ -128,13 +128,13 @@ if ("landcover" %in% chosen_layers) {
 
 if ("macroclimate" %in% chosen_layers) {
   if (!dir.exists("data/spatial_drivers/macroclimate/worldclim/climate/")) {
-    cat(red("You've selected macroclimate as one of your chosen_layers, but do not have any WorldClim spatial files downloaded into the correct location ('data/spatial_drivers/macroclimate/worldclim/climate/'). These will be automatically downloaded when you run scripts/03_data_extraction/prep_spatial.R \n"))
+    cat(crayon::red("You've selected macroclimate as one of your chosen_layers, but do not have any WorldClim spatial files downloaded into the correct location ('data/spatial_drivers/macroclimate/worldclim/climate/'). These will be automatically downloaded when you run scripts/03_data_extraction/prep_spatial.R \n\n"))
   }
 }
 
 if ("soiltemp" %in% chosen_layers) {
   if (!file.exists("data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif")) {
-    cat(red("You've selected soiltemp as one of your chosen_layers, but do not have the corresponding SoilTemp global map downloaded into the correct location ('data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif'). This will be automatically downloaded when you run scripts/03_data_extraction/prep_spatial.R \n"))
+    cat(crayon::red("You've selected soiltemp as one of your chosen_layers, but do not have the corresponding SoilTemp global map downloaded into the correct location ('data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif'). This will be automatically downloaded when you run scripts/03_data_extraction/prep_spatial.R \n\n"))
   }
 }
 
