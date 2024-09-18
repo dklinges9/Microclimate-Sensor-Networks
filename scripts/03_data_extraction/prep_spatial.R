@@ -93,6 +93,10 @@ if (continue) {
     # Because WorldClim is made available in WGS84, need to use 
     # spatial_extent_buffer (which is in WGS84) for extracting
 
+    if (!dir.exists("data/spatial_drivers/macroclimate/worldclim/")) {
+      dir.create("data/spatial_drivers/macroclimate/worldclim/", recursive = T, showWarnings = F)
+    }
+    
     # Download = F entails that the function first searches the specified `path`
     # to see if tile already downloaded
     macroclimate <- geodata::worldclim_tile(

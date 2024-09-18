@@ -671,6 +671,13 @@ names(bin_id_r) <- c("Dim_1", "Dim_2", "Dim_3", "Bins")
 
 ## Write out CSV of selected sites, and rasters of environmental bins -----------
 
+if (!dir.exists("data/landscape_data/")) {
+  dir.create("data/landscape_data/", recursive = T, showWarnings = F)
+}
+if (!dir.exists("data/chosen_sites/")) {
+  dir.create("data/chosen_sites/", recursive = T, showWarnings = F)
+}
+
 # Check if CSV for selected sites already exists, if so confirm with user 
 # before overwriting
 if (file.exists(paste0("data/chosen_sites/selected_sites_",
@@ -686,7 +693,7 @@ if (file.exists(paste0("data/chosen_sites/selected_sites_",
   }
   
   if (tolower(ans1) %in% c("y", "yes")) {
-    
+
     write_csv(layers_df, paste0("data/landscape_data/layers_", 
                                 filepattern, "_", n_sites, ".csv"))
     write_csv(terrain_df, paste0("data/landscape_data/landscape_bins_", filepattern,
