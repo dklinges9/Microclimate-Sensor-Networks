@@ -1,4 +1,3 @@
-## David Klinges
 ## This script queries a DEM of desired resolution and extent
 
 pkgs <- c("crayon", "elevatr", "raster", "terra")

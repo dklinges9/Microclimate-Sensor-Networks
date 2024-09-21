@@ -1,4 +1,3 @@
-# David Klinges
 # This script pulls in and preps remote sensing data for the Ambalavero landscape, 
 # in order to generate a semi-stratified set of points at which to deploy 
 # microclimate loggers

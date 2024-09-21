@@ -1,4 +1,3 @@
-## David Klinges
 ## Power analysis for vertical strat forest collapse
 
 

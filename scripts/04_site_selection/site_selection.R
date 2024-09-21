@@ -1,4 +1,3 @@
-## David Klinges
 ## Site selection algorithm
 
 ## 1. Workspace prep --------
