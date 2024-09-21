@@ -1,22 +1,20 @@
-## Microclimate Sensor Networks: Site Selection and Visualization Program
-(please see README.txt for an unformatted version of this readme)
+Microclimate Sensor Networks: Site Selection and Visualization Program
+(please see README.md for a Markdown-formatted version of this readme)
 
 
-![](img/Screenshot_1.png)
+INSTRUCTIONS
 
-## Instructions
+1. Set Parameters
+(scripts/set_parameters.R)
 
-### **1. Set Parameters**
-_scripts/set_parameters.R_  
+*Requires user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on. By default provides sensor selection for a landscape in Madagascar. See instructions within this script.
 
-*Requires user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on. By default provides sensor selection for a landscape in Madagascar. See instructions within this script.  
+2. Main Program
+(scripts/main.R)  
 
-### **2. Main Program**
-_scripts/main.R_  
+*This file is your home base.* Used to run all steps in the program, in their appropriate sequence. Running scripts out of order may cause the data pipeline to be interrupted due to error messages.
 
-**This file is your home base.** Used to run all steps in the program, in their appropriate sequence. Running scripts out of order may cause the data pipeline to be interrupted due to error messages.
-
-### **3. Inspect Outputs**
+3. Inspect Outputs
 
 - CSV of chosen sensor locations, and environmental information corresponding to these locations, is provided in the directory `data/chosen_sites/`  
 - CSVs and TIF rasters of landscape environmental variation and bins are provided in the directory `data/landscape_data/`  
@@ -27,46 +25,52 @@ _scripts/main.R_
 _That's it!_ See below for descriptions of other source files, which should not be modified (unless further customization desired).  
 
 
-### Internal files (_do not modify_)  
 
-#### **Source Code**
-_scripts/00_source/functions.R_  
+
+
+
+
+
+INTERNAL FILES (do not modify!!)  
+
+Source Code
+(scripts/00_source/functions.R)
 
 Source code used internally to support other scripts. **Do not modify.**
 
-#### **Check Packages**
-_scripts/00_source/check_pkgs.R_  
+Check Packages
+(scripts/00_source/check_pkgs.R)
 
 Checks that the user has all necessary R packages, whom is prompted to install missing 
 packages, if any. **Do not modify.**
 
-#### **Check Parameters**
-_scripts/01_parameters/check_parameters.R_
+Check Parameters
+(scripts/01_parameters/check_parameters.R)
 
 Checks all user parameter inputs to confirm they meet the program's standards. **Do not modify.**   
 
-#### **Power Analysis**
-_scripts/02_power_analysis/power_analysis.R_  
+Power Analysis
+(scripts/02_power_analysis/power_analysis.R)
 
 Performs a test of the statistical power of a study design based upon the chosen number of spatial drivers and sample size (i.e. number of sensors). **Do not modify.**  
 
-#### **Get DEM**
-_scripts/03_data_extraction/get_dem.R_  
+Get DEM
+(scripts/03_data_extraction/get_dem.R)
 
 Downloads a DEM for a desired spatial extent and desired spatial resolution, and uses this DEM to calculate elevation, slope, and aspect. **Do not modify.**   
 
-#### **Prep Spatial data**
-_scripts/03_data_extraction/prep_spatial.R_  
+Prep Spatial data
+(scripts/03_data_extraction/prep_spatial.R)
 
 Preps spatial data for spatial environmental drivers to be used in point selection and visualization scripts. **Do not modify.**  
 
-#### **Site Selection**
-_scripts/04_site_selection/site_selection.R_  
+Site Selection
+(scripts/04_site_selection/site_selection.R)
 
 Performs selection of sensor sites that adequately represent environmental space across the specified landscape. **Do not modify.**  
 
-#### **Visualize Sites**
-_scripts/05_visualize_sites/visualize_sites.R_
+Visualize Sites
+(scripts/05_visualize_sites/visualize_sites.R)
 
 Generates maps of chosen sites over environmental layers, and other plots of distribution of environmental space and how it was sampled. **Do not modify.**  
 
