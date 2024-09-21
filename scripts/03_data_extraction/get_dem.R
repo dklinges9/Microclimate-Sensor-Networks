@@ -43,7 +43,14 @@ if (continue) {
   crs(spatial_extentr) <- projection
   
   cat("Getting DEM....\n")
-  dem <- get_dem(r = terra::rast(spatial_extentr), resolution = chosen_rez)
+  
+  if (projection_units == "m") {
+    dem <- get_dem(r = terra::rast(spatial_extentr), resolution = chosen_rez)
+  }
+  
+  if (projection_units == "dd") {
+    dem <- get_dem(r = terra::rast(spatial_extentr), resolution = chosen_rez * 120000)
+  }
   
   cat("writing DEM...\n")
   # Save DEM file. But first, check if already exists and ask user if they
