@@ -14,14 +14,14 @@ new_pkgs <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
 if (length(new_pkgs) == 0) {
   cat("All packages have been installed succesfully.\n")
 } else {
-    # prompt user to confirm whether or not to install required packages
+  # prompt user to confirm whether or not to install required packages
   if (length(new_pkgs)) {
     
     cat("\033[0;31mFollowing packages have not yet been installed:\033[0m\n") # 41 = white text, red bg, 31 = red text
     cat(paste0(new_pkgs, "\n"))
     cat("\033[0;31mWould you like to install these packages and their dependencies? (Y/N): \033[0m\n")
     ans1 <- readline(" ")
-
+    
     # for zen4R, installation via github (requires devtools, and Rtools dependency)
     if (sum(c("zen4R") %in% new_pkgs)>0) {
       cat("Package 'zen4R' not installed, and must be installed from GitHub...\n")
