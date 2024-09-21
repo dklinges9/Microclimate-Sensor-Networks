@@ -44,10 +44,10 @@ if (continue) {
   ## .... Temporary extent with buffer ---------
   
   if (projection_units == "dd") {
-    spatial_extent_buffer <- ext(spatial_extent[1] - 0.5,
-                                 spatial_extent[2] + 0.5,
-                                 spatial_extent[3] - 0.5,
-                                 spatial_extent[4] + 0.5) 
+    spatial_extent_buffer <- rast(ext(spatial_extent[1] - 0.5,
+                                      spatial_extent[2] + 0.5,
+                                      spatial_extent[3] - 0.5,
+                                      spatial_extent[4] + 0.5)) 
   }
   if (projection_units == "m") {
     
@@ -91,7 +91,7 @@ if (continue) {
   if ("macroclimate" %in% chosen_layers) {
     # Because WorldClim is made available in WGS84, need to use 
     # spatial_extent_buffer (which is in WGS84) for extracting
-
+    
     if (!dir.exists("data/spatial_drivers/macroclimate/worldclim/")) {
       dir.create("data/spatial_drivers/macroclimate/worldclim/", recursive = T, showWarnings = F)
     }
@@ -115,14 +115,14 @@ if (continue) {
       path = "data/spatial_drivers/macroclimate/worldclim/")[[1]] %>% 
       terra::resample(spatial_extent_buffer) %>% 
       terra::merge(macroclimate)
-       
+    
     macroclimate <- geodata::worldclim_tile(
       var = 'bio', lon = ext(spatial_extent_buffer)[1], 
       lat = ext(spatial_extent_buffer)[4], download = F, 
       path = "data/spatial_drivers/macroclimate/worldclim/")[[1]] %>% 
       terra::resample(spatial_extent_buffer) %>% 
       terra::merge(macroclimate)
-
+    
     macroclimate <- geodata::worldclim_tile(
       var = 'bio', lon = ext(spatial_extent_buffer)[2], 
       lat = ext(spatial_extent_buffer)[4], download = F, 
@@ -161,7 +161,7 @@ if (continue) {
       soiltemp <- rast("data/spatial_drivers/microclimate/soil_bio/SBIO1_0_5cm_Annual_Mean_Temperature.tif")
     }
   }
-
+  
   ## ....Import custom layers ------------
   
   if (any(complete.cases(custom_layers_test))) {
