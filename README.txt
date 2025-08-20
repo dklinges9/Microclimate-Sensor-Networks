@@ -19,6 +19,8 @@ INSTRUCTIONS
 
 *Requires user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on. By default provides sensor selection for a landscape in Madagascar. See instructions within this script.
 
+ALTERNATIVELY, you can set the parameters using our Excel template, found in docs/parameters/parameter_template.xlsx
+
 2. Main Program
 (scripts/main.R)  
 

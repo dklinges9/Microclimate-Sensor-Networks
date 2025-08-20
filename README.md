@@ -22,6 +22,8 @@ _scripts/set_parameters.R_
 
 *Requires user input* of parameters specifying your target landscape, budget, desired environmental drivers, and so on. By default provides sensor selection for a landscape in Madagascar, but can work for anywhere non-polar terrestrial location on Earth. See instructions within this script.  
 
+_Alternatively_, you can set the parameters using our Excel template, found in `docs/parameters/parameter_template.xlsx` 
+
 ### **2. Main Program**
 _scripts/main.R_  
 
