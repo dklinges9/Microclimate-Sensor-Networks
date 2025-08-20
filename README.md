@@ -6,7 +6,7 @@ _Questions? Please [submit an issue here](https://github.com/dklinges9/Microclim
 <br>
 <br>
 
-![](img/Picture1.png)
+![](img/workflow.png)
 
 
 **See our paper published in _Ecological Informatics_ for further info:**  
