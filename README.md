@@ -12,6 +12,8 @@ _Questions? Please [submit an issue here](https://github.com/dklinges9/Microclim
 **See our paper published in _Ecological Informatics_ for further info:**  
 [Klinges, D.H., Lembrechts, J.J., Van de Vondel, S., Greenlee, E.J., Hayles-Cotton, K., Senior, R.A., 2025. A workflow for microclimate sensor networks: Integrating geographic tools, statistics, and local knowledge. Ecological Informatics 91, 103376. https://doi.org/10.1016/j.ecoinf.2025.103376](https://www.sciencedirect.com/science/article/pii/S1574954125003851)
 
+<br>
+<br>
 
 ## Instructions
 
