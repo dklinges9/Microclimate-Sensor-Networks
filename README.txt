@@ -1,6 +1,16 @@
 Microclimate Sensor Networks: Site Selection and Visualization Program
 (please see README.md for a Markdown-formatted version of this readme)
 
+Questions? Please submit an issue here:  
+https://github.com/dklinges9/Microclimate-Sensor-Networks/issues
+
+If you don't have a GitHub account and can't submit issues, then reach out to Dave Klinges at: dklinges9@gmail.com. Responses will be faster for issues than emails, however!  
+
+See our paper published in _Ecological Informatics_ for further info:
+Klinges, D.H., Lembrechts, J.J., Van de Vondel, S., Greenlee, E.J., Hayles-Cotton, K., Senior, R.A., 2025. A workflow for microclimate sensor networks: Integrating geographic tools, statistics, and local knowledge. Ecological Informatics 91, 103376. https://doi.org/10.1016/j.ecoinf.2025.103376
+
+https://www.sciencedirect.com/science/article/pii/S1574954125003851
+
 
 INSTRUCTIONS
 
