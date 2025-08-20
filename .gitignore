@@ -18,6 +18,11 @@ figures/paper_figures/*
 figures/analysis/zz_examples/*
 data/paper_data/*
 
+# accessory code
+scripts/05_visualize_sites/zz_paper_figures/*
+scripts/stijn_code/*
+scripts/04_site_selection/zz_site_selection_retired.R
+
 # History files
 .Rhistory
 .Rapp.history
