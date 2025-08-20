@@ -1,34 +1,23 @@
-## Set parameters for each step of the workflow
 
 
-## Load libraries ---------------
 
+parameters <- readxl::read_excel(
+  "docs/parameters/parameter_template.xlsx",
+  skip = 1, sheet = "DATA_INPUT"
+)
 
-col_types = c("text", "numeric", "numeric", "numeric", "text", "text",
-              "text", "numeric", "numeric", "numeric", "text", "text",
-              "text", "text", "logical", "numeric", "numeric", "text",
-              "logical", "text")
-
-cat("Setting parameters...\n")
-
-## Source Excel parameters per user request -----------
-# This will grab the parameter values from the Excel template if 
-# parameters_from_excel == TRUE
-if (parameters_from_excel) {
-  source("scripts/01_parameters/parameters_from_excel.R")
-}
 
 ## Project parameters -----------
 
 # What is the name of the landscape? This will be appended to names of output files
 # If left NA will name files according to the chosen spatial extent
-landscape_name <- "madagascar"
+landscape_name <- parameters$landscape_name
 
 # Your budget for sensors. This will be used to constrain the amount of 
 # environmental space that you can sample, and inform the power analysis
-budget <- 10000
+budget <- parameters$budget
 # And, the cost of each sensor
-cost_per_sensor <- 100
+cost_per_sensor <- parameters$cost_per_sensor
 
 # How many sensor sites do you want?
 # The program will return a set of sites that will be no fewer than n_sites,
@@ -37,7 +26,7 @@ cost_per_sensor <- 100
 # power analysis and chosen budget
 # Also note that depending on your study design, you may want to place multiple
 # sensors at a given spatial point (e.g. at different heights/depths).
-n_sites <- 100
+n_sites <- parameters$n_sites
 
 ## Spatial parameters ------------
 
@@ -47,32 +36,34 @@ n_sites <- 100
 # to account for lost edges when reprojecting and when calculating topographical
 # variables 
 # Example provided below for a region in Southeastern Madagascar
-spatial_extent <- c(4361769.08128998, 4408800.03005205, -2304731.74676982, -2271216.33643937)
-
+spatial_extent <- as.numeric(
+  strsplit(parameters$spatial_extent, ",")[[1]]
+)
+  
 # Provide the projection of the specified spatial_extent
 # Some example projections:
 # "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 # "+proj=longlat +datum=WGS84" 
 # Note that projections with units in meters will entail MUCH faster access
 # of a Digital Elevation Model (DEM) in get_dem.R
-projection <- "+proj=robin +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs" 
+projection <- parameters$projection 
 
 # What are the units of your projection? Must be either decimal degrees (dd) 
 # or meters (m)
-projection_units <- "m" # c("m", "dd") for 'meters' and 'decimal degrees'
+projection_units <- parameters$projection_units # c("m", "dd") for 'meters' and 'decimal degrees'
 
 # Your desired resolution of the Digital Elevation Model (DEM). Finer resolution
 # means slower processing. This resolution will also determine the resolution 
 # at which all analyses are conducted (other layers resampled to this resolution)
 # Can divide meters by 120000 for quick (rough) translation to decimal degrees
-chosen_rez <- 100
+chosen_rez <- parameters$chosen_rez
 
 # What is the minimum distance between any two points that you will tolerate?
 # In theory, the program might choose two locations right next to each other.
 # This parameter sets a minimum distance between all locations
 # Must be in same units as projection_units
 # Can divide meters by 120000 for quick (rough) translation to decimal degrees
-min_distance <- 500
+min_distance <- parameters$min_distance
 
 # What is the maximum distance between any two locations that you will tolerate?
 # Useful if you wish to reduce travel time between sensor locations. The program
@@ -80,14 +71,14 @@ min_distance <- 500
 # means program might take longer)
 # Must be in same units as projection_units
 # Can divide meters by 120000 for quick (rough) translation to decimal degrees
-max_distance <- 20000
+max_distance <- parameters$max_distance
 
 ## Environmental layers ---------
 # What environmental layers do you wish to use to inform the sampling algorithm?
 # chosen_layers must be a string of the names of a subset (or all) of the following:
 # elevation, slope, aspect, landcover, macroclimate, soiltemp
-chosen_layers <- c("elevation", "slope", "aspect", "landcover", 
-                   "soiltemp", "macroclimate")
+chosen_layers <- gsub(" ", "", strsplit(parameters$chosen_layers, ",")[[1]])
+
 # NOTE: elevation, macroclimate, and soiltemp are all highly correlated. We 
 # recommend choosing from just one of these layers depending on your needs. All
 # three are in the set above by default for illustrative purposes.
@@ -103,9 +94,10 @@ chosen_layers <- c("elevation", "slope", "aspect", "landcover",
 # Can be any resolution (but will be resampled to resolution of DEM, either 
 # via billinear interpolation for continuous rasters or nearest neighbor for
 # categorical rasters)
-custom_layers <- NA
+custom_layers <- read_csv(parameters$custom_layers)
 # What are the desired names for each layer's variable?
-custom_layers_names <- NA
+custom_layers_names <- parameters$custom_layers_names
+
 # Example for Madagascar:
 # custom_layers <- c("data/spatial_drivers/vegetation/madagascar_treecover2000.tif")
 # custom_layers_names <- c("treecover2000")
@@ -120,7 +112,7 @@ custom_layers_names <- NA
 # Must have an extent that is equal to or larger than the `spatial_extent` above
 # Must have numeric values
 # Can be any resolution
-layer_mask <- NA
+layer_mask <- read_csv(parameters$layer_mask)
 # Example for Madagascar: Perhaps you are only interested in deploying sensors 
 # within forests. Here, we'll use a tree cover map from year 2000, and recode 
 # this map so that "forest" is defined as tree cover > 50%
@@ -129,13 +121,13 @@ layer_mask <- NA
 
 # When selecting sites, do you want to give more weight to outliers within 
 # the environmental space (e.g. more topographically complex areas)? TRUE or FALSE
-favor_outliers <- FALSE
+favor_outliers <- parameters$favor_outliers
 
 ## Power analysis parameters ----------
 
 # Estimate of power (1 minus Type II error probability). If unknown, keep at 0.8
 # OR leave as NULL or NA to calculate power from other parameters
-power <- NULL # 0.8
+power <- parameters$power # 0.8
 
 # Estimate of the explanatory power (r2) of chosen set of predictors for
 # explaining response variable of interest (that is measured by sensors), OR
@@ -143,7 +135,7 @@ power <- NULL # 0.8
 # Used for calculating f2 (effect size) in power analysis. If unknown, kept at 0.15
 # (reasonably cautious for most environmental relationships). If `power` is NULL,
 # `r2` must be provided a value. Cannot have NULL or NA for both
-r2 <- 0.15
+r2 <- parameters$r2
 
 ## Required sites, or sites from prior program run -----------
 
@@ -164,7 +156,7 @@ r2 <- 0.15
 # (other columns are also allowed but ignored)
 # If you include columns dim1_bin, dim2_bin, and dim3_bin, must set 
 # program_rerun to TRUE and provide landscape_bins (see below)
-required_sites <- NA
+required_sites <- read_csv(parameters$required_sites)
 # For example, randomly choosing 50 locations from a prior run for Madagascar, to
 # represent 50 good/feasible sites that have already been visited: 
 # required_sites <- readr::read_csv("data/chosen_sites/selected_sites_madagascar_100.csv") %>%
@@ -179,12 +171,12 @@ required_sites <- NA
 ## Program re-run parameters --------
 
 # Are you re-running the program to update chosen sensor locations? TRUE or FALSE
-program_rerun <- FALSE
+program_rerun <- parameters$program_rerun
 
 # If TRUE, you need to provide the bin values from the last program run. This was
 # saved as a CSV as "data/landscape_data/landscape_bins_*.csv"
 # Otherwise, leave as NA
-landscape_bins <- NA
+landscape_bins <- read_csv(parameters$landscape_bins)
 # Example for Madagascar:
 # landscape_bins <- readr::read_csv("data/landscape_data/landscape_bins_madagascar_100.csv")
 
