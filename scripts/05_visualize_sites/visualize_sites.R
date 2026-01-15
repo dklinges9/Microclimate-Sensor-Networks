@@ -109,8 +109,14 @@ if (length(unique(binID_df$Bins))) {
 ## ....** Designate plot dimensions --------
 
 # Create dimensions according to the dimensions of input raster
-plot_h <- dim(layers)[1] / 100
-plot_w <- dim(layers)[2] / 100
+# Take log of dims. This ensures that smaller rasters still have reasonable 
+# plot sizes, while big rasters won't have excessively massive plots
+plot_h <- log(dim(layers)[1])
+plot_w <- log(dim(layers)[2]) 
+# Make sure dimensions aren't too small
+plot_h <- ifelse(plot_h < 3, 3, plot_h)
+plot_w <- ifelse(plot_w < 3, 3, plot_w)
+
 # Find bigger of two dimensions
 max_d <- ifelse(plot_w > plot_h, plot_w, plot_h)
 # We don't want to save any files as too big. If the bigger dimension is 
